@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jamaica Emergency Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ── Reset & Base ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+
+    /* ── Page switching ── */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Shared containers ── */
+    .container      { max-width: 460px; margin: 50px auto; padding: 0 16px; }
+    .container-wide { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* ── Card ── */
+    .card {
+      background: #fff; border: 1px solid #e4e7ec;
+      border-radius: 10px; padding: 32px 28px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ── Logo ── */
+    .logo { text-align: center; margin-bottom: 26px; }
+    .logo-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+    .logo h1 { font-size: 1.2rem; font-weight: 700; }
+    .logo p { font-size: 0.78rem; color: #666; margin-top: 3px; }
+
+    /* ── Section title ── */
+    .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 18px; color: #111; }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; color: #444; margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid #d0d5dd; border-radius: 6px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      color: #1a1a1a; background: #fff; outline: none;
+      transition: border-color 0.18s; -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #2a6049; box-shadow: 0 0 0 3px rgba(42,96,73,0.09);
+    }
+    textarea { resize: vertical; min-height: 85px; }
+    input::placeholder, textarea::placeholder { color: #b0b7c3; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: block; width: 100%; padding: 10px;
+      border: none; border-radius: 6px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; text-align: center; transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover  { opacity: 0.87; transform: translateY(-1px); }
+    .btn:active { transform: none; }
+    .btn-primary { background: #2a6049; color: #fff; }
+    .btn-danger  { background: #c0392b; color: #fff; margin-top: 8px; }
+
+    /* ── Alerts ── */
+    .alert {
+      display: none; padding: 9px 13px; border-radius: 6px;
+      font-size: 0.8rem; line-height: 1.5; margin-bottom: 14px; border-left: 4px solid;
+    }
+    .alert.show { display: block; }
+    .alert-error   { background: #fdf0ef; border-color: #c0392b; color: #922b21; }
+    .alert-success { background: #edf7f2; border-color: #2a6049; color: #1e5c3a; }
+    .alert-info    { background: #fffbe6; border-color: #f0a500; color: #7d5a00; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; border-bottom: 2px solid #e4e7ec; margin-bottom: 22px; }
+    .tab {
+      flex: 1; padding: 9px; background: none; border: none;
+      font-family: 'Inter', sans-serif; font-size: 0.83rem; font-weight: 600;
+      color: #999; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab.active { color: #2a6049; border-bottom-color: #2a6049; }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Link text ── */
+    .link-text { font-size: 0.78rem; color: #666; text-align: center; margin-top: 12px; }
+    .link-text a { color: #2a6049; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .link-text a:hover { text-decoration: underline; }
+
+    /* ── Portal choice ── */
+    .portal-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+    .choice-btn {
+      padding: 16px 10px; border: 2px solid #e4e7ec; border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .choice-btn:hover { border-color: #2a6049; background: #f0f7f4; }
+    .choice-btn .ci { font-size: 1.7rem; margin-bottom: 5px; display: block; }
+    .choice-btn .ct { font-size: 0.8rem; font-weight: 700; }
+    .choice-btn .cs { font-size: 0.7rem; color: #888; margin-top: 2px; }
+
+    /* ── Emergency type grid ── */
+    .type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 18px; }
+    .type-btn {
+      padding: 14px 6px; border: 2px solid #e4e7ec; border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: center;
+      font-family: 'Inter', sans-serif; transition: border-color 0.2s, background 0.2s;
+    }
+    .type-btn:hover { border-color: #aaa; }
+    .type-btn.selected { border-color: #c0392b; background: #fdf2f0; }
+    .type-btn .ti { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+    .type-btn .tl { font-size: 0.7rem; font-weight: 600; color: #444; }
+    .type-btn.selected .tl { color: #c0392b; }
+
+    /* ── Custom issue input — shown when "Other" is selected ── */
+    .custom-issue-wrap {
+      display: none;
+      margin-top: 2px;
+      margin-bottom: 18px;
+      animation: fadeIn 0.2s ease;
+    }
+    .custom-issue-wrap.visible { display: block; }
+    .custom-issue-wrap label {
+      font-size: 0.8rem; font-weight: 600; color: #444; margin-bottom: 6px;
+    }
+    .custom-issue-wrap input {
+      border: 1.5px solid #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+    }
+    .custom-issue-wrap input:focus {
+      border-color: #4b44cc;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.18);
+    }
+    /* "Other" tile uses purple accent when selected */
+    .type-btn[data-type="other"].selected { border-color: #6c63ff; background: #f3f2ff; }
+    .type-btn[data-type="other"].selected .tl { color: #4b44cc; }
+
+    /* ── Severity ── */
+    .sev-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .sev-btn {
+      padding: 7px 4px; border: 1px solid #e4e7ec; border-radius: 6px;
+      background: #fff; cursor: pointer; font-family: 'Inter', sans-serif;
+      font-size: 0.73rem; font-weight: 600; color: #666; text-align: center;
+      transition: all 0.15s;
+    }
+    .sev-btn:hover { background: #f5f5f5; }
+    .sev-btn.sel-low    { background: #edf7f2; border-color: #27ae60; color: #1e8449; }
+    .sev-btn.sel-medium { background: #fffbe6; border-color: #f0a500; color: #7d5a00; }
+    .sev-btn.sel-high   { background: #fdf0ef; border-color: #c0392b; color: #922b21; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: #1a3a2a; color: #fff;
+      padding: 0 20px; height: 54px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-title { font-weight: 700; font-size: 0.92rem; }
+    .topbar-user { font-size: 0.75rem; color: rgba(255,255,255,0.65); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .topbar-btn {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 5px 12px; border-radius: 5px;
+      font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .topbar-btn:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── Hotline strip ── */
+    .hotline-strip {
+      background: #c0392b; color: #fff; text-align: center;
+      padding: 7px 16px; font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* ── Info box ── */
+    .info-box { background: #f8f9fb; border: 1px solid #e4e7ec; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px; }
+    .ib-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px solid #eee; }
+    .ib-row:last-child { border-bottom: none; }
+    .ib-key { color: #888; font-weight: 500; }
+    .ib-val { color: #111; font-weight: 600; }
+
+    /* ── Badges ── */
+    .badge {
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+      display: inline-block; white-space: nowrap;
+    }
+    .badge-fire       { background: #fde8e4; color: #c0392b; }
+    .badge-flood      { background: #e3f0fb; color: #1a6fa3; }
+    .badge-emergency  { background: #fff8e1; color: #b07c00; }
+    .badge-hurricane  { background: #f3e8ff; color: #7c3aed; }
+    .badge-earthquake { background: #fff0e0; color: #c05800; }
+    .badge-high       { background: #fde8e4; color: #c0392b; }
+    .badge-medium     { background: #fff8e1; color: #b07c00; }
+    .badge-low        { background: #edf7f2; color: #1e8449; }
+
+    /* ── Status badges ── */
+    .status-badge {
+      padding: 3px 10px; border-radius: 10px;
+      font-size: 0.67rem; font-weight: 700; text-transform: uppercase;
+      display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    }
+    .status-new        { background: #e8f4fd; color: #1a6fa3; border: 1px solid #b3d9f5; }
+    .status-inprogress { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+    .status-responded  { background: #e8f5e9; color: #2e7d32; border: 1px solid #81c784; }
+    .status-completed  { background: #ede7f6; color: #5e35b1; border: 1px solid #b39ddb; }
+
+    /* ── Dot indicator for status ── */
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .dot-new        { background: #1a6fa3; }
+    .dot-inprogress { background: #f0a500; animation: blink 1.4s ease-in-out infinite; }
+    .dot-responded  { background: #2e7d32; }
+    .dot-completed  { background: #5e35b1; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ── Report item (public view) ── */
+    .report-item {
+      background: #fff; border: 1px solid #e4e7ec; border-radius: 8px;
+      padding: 13px 15px; margin-bottom: 9px; font-size: 0.82rem;
+    }
+    .report-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .report-item-title { font-weight: 700; font-size: 0.88rem; }
+    .report-meta { color: #999; font-size: 0.73rem; margin-top: 5px; }
+    .official-response {
+      margin-top: 10px; padding: 9px 12px;
+      background: #f0f7f4; border-left: 3px solid #2a6049;
+      border-radius: 0 6px 6px 0; font-size: 0.79rem; color: #1a3a2a; line-height: 1.5;
+    }
+    .official-response strong { display: block; font-size: 0.7rem; color: #2a6049; margin-bottom: 3px; font-weight: 700; }
+
+    .no-reports {
+      text-align: center; color: #c0c0c0; padding: 30px;
+      font-size: 0.83rem; border: 1px dashed #ddd; border-radius: 8px;
+    }
+
+    /* ============================================================
+       DASHBOARD LAYOUT
+    ============================================================= */
+
+    /* Top stats bar */
+    .dash-stats {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 12px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff; border: 1px solid #e4e7ec; border-radius: 10px;
+      padding: 16px 14px; display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .stat-card .s-num { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-card .s-lbl { font-size: 0.7rem; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .s-sub { font-size: 0.7rem; color: #aaa; margin-top: 2px; }
+    .sc-total   .s-num { color: #1a3a2a; }
+    .sc-new     .s-num { color: #1a6fa3; }
+    .sc-prog    .s-num { color: #b07c00; }
+    .sc-done    .s-num { color: #5e35b1; }
+
+    /* Dashboard two-column layout: list on left, detail on right */
+    .dash-layout { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+
+    /* Left panel — report list */
+    .dash-list-panel {
+      background: #fff; border: 1px solid #e4e7ec; border-radius: 10px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .dash-list-header {
+      padding: 14px 16px; border-bottom: 1px solid #e4e7ec;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .dash-list-header h3 { font-size: 0.88rem; font-weight: 700; color: #111; }
+
+    /* Filter tabs inside list panel */
+    .dash-filters { display: flex; gap: 4px; flex-wrap: wrap; }
+    .dash-filter-btn {
+      padding: 4px 10px; border: 1px solid #e4e7ec; border-radius: 14px;
+      background: #fff; font-family: 'Inter', sans-serif; font-size: 0.7rem;
+      font-weight: 600; color: #666; cursor: pointer; transition: all 0.15s;
+    }
+    .dash-filter-btn:hover { background: #f5f5f5; }
+    .dash-filter-btn.active { background: #1a3a2a; color: #fff; border-color: #1a3a2a; }
+
+    /* Individual report row in list */
+    .dash-report-row {
+      padding: 13px 16px; border-bottom: 1px solid #f0f2f5; cursor: pointer;
+      transition: background 0.15s; position: relative;
+    }
+    .dash-report-row:last-child { border-bottom: none; }
+    .dash-report-row:hover { background: #f7f9fb; }
+    .dash-report-row.selected { background: #f0f7f4; border-left: 3px solid #2a6049; }
+
+    .drr-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 5px; }
+    .drr-title { font-size: 0.84rem; font-weight: 700; color: #111; line-height: 1.25; flex: 1; }
+    .drr-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .drr-meta span { font-size: 0.7rem; color: #888; }
+    .drr-location { font-size: 0.72rem; color: #666; display: flex; align-items: center; gap: 3px; margin-top: 3px; }
+
+    /* Right panel — report detail view */
+    .dash-detail-panel {
+      background: #fff; border: 1px solid #e4e7ec; border-radius: 10px;
+      overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      position: sticky; top: 70px;
+    }
+
+    .dash-detail-empty {
+      padding: 60px 24px; text-align: center; color: #bbb;
+    }
+    .dash-detail-empty .dee-icon { font-size: 2.5rem; margin-bottom: 10px; display: block; opacity: 0.4; }
+    .dash-detail-empty p { font-size: 0.83rem; }
+
+    /* Detail panel header */
+    .detail-header {
+      padding: 16px 20px; border-bottom: 1px solid #e4e7ec;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    }
+    .detail-header-left h2 { font-size: 1rem; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+    .detail-header-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* Detail body */
+    .detail-body { padding: 18px 20px; max-height: calc(100vh - 220px); overflow-y: auto; }
+
+    /* Meta info grid */
+    .detail-meta-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 16px;
+    }
+    .meta-cell {
+      background: #f8f9fb; border-radius: 6px; padding: 10px 12px;
+    }
+    .meta-cell .mc-key { font-size: 0.68rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .meta-cell .mc-val { font-size: 0.83rem; font-weight: 600; color: #111; }
+
+    /* Description box */
+    .detail-desc {
+      background: #f8f9fb; border-radius: 6px; padding: 12px 14px;
+      font-size: 0.83rem; color: #333; line-height: 1.65; margin-bottom: 16px;
+    }
+    .detail-desc-label { font-size: 0.68rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+
+    /* Status update section */
+    .detail-section-label {
+      font-size: 0.72rem; font-weight: 700; color: #444;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+
+    .status-btn-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+    .st-btn {
+      padding: 6px 13px; border-radius: 6px; border: 1px solid #e4e7ec;
+      background: #fff; font-family: 'Inter', sans-serif; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s; color: #555;
+    }
+    .st-btn:hover { opacity: 0.8; }
+    .st-btn.st-new.on        { background: #e8f4fd; border-color: #1a6fa3; color: #1a6fa3; }
+    .st-btn.st-inprogress.on { background: #fff3cd; border-color: #f0a500; color: #856404; }
+    .st-btn.st-responded.on  { background: #e8f5e9; border-color: #27ae60; color: #1e7a3e; }
+    .st-btn.st-completed.on  { background: #ede7f6; border-color: #7e57c2; color: #5e35b1; }
+
+    /* Response section */
+    .response-area { margin-top: 4px; }
+    .response-area textarea {
+      min-height: 90px; font-size: 0.84rem;
+      border: 1px solid #d0d5dd; border-radius: 6px;
+      margin-bottom: 8px; resize: vertical;
+    }
+    .btn-respond {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 20px; border: none; border-radius: 6px;
+      background: #2a6049; color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-respond:hover  { opacity: 0.87; transform: translateY(-1px); }
+    .btn-respond:active { transform: none; }
+
+    /* Saved responses list */
+    .saved-responses { margin-top: 14px; }
+    .saved-response-item {
+      background: #f0f7f4; border-left: 3px solid #2a6049;
+      border-radius: 0 6px 6px 0; padding: 10px 13px; margin-bottom: 8px;
+    }
+    .sri-meta {
+      font-size: 0.68rem; color: #2a6049; font-weight: 700;
+      margin-bottom: 5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .sri-text { font-size: 0.81rem; color: #1a3a2a; line-height: 1.55; }
+
+    /* Divider */
+    .detail-divider { height: 1px; background: #f0f2f5; margin: 14px 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .dash-layout { grid-template-columns: 1fr; }
+      .dash-detail-panel { position: static; }
+    }
+    @media (max-width: 600px) {
+      .card { padding: 22px 16px; }
+      .type-grid { grid-template-columns: repeat(2,1fr); }
+      .portal-choice { grid-template-columns: 1fr; }
+      .dash-stats { grid-template-columns: repeat(2,1fr); }
+      .detail-meta-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Hotline strip ── -->
+  <div class="hotline-strip">
+    🚨 Life-threatening emergency? Call 110 (Fire) or 119 (Police) immediately
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 1: ENTRY
+  ============================================================= -->
+  <div class="page active" id="page-entry">
+    <div class="container">
+      <div class="card">
+        <div class="logo">
+          <span class="logo-icon">🇯🇲</span>
+          <h1>Jamaica Emergency Portal</h1>
+          <p>Select how you want to sign in</p>
+        </div>
+        <div class="portal-choice">
+          <div class="choice-btn" onclick="showPage('page-gov')" role="button" tabindex="0">
+            <span class="ci">⚖️</span>
+            <div class="ct">Government</div>
+            <div class="cs">Officials only</div>
+          </div>
+          <div class="choice-btn" onclick="showPage('page-user')" role="button" tabindex="0">
+            <span class="ci">👤</span>
+            <div class="ct">Public User</div>
+            <div class="cs">Residents</div>
+          </div>
+        </div>
+        <p style="font-size:0.76rem;color:#999;text-align:center;line-height:1.6;">
+          Report flooding, fires, and emergencies across Jamaica.<br>
+          Government officials use their Badge ID to review reports.
+        </p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 2: GOVERNMENT LOGIN
+  ============================================================= -->
+  <div class="page" id="page-gov">
+    <div class="topbar">
+      <div class="topbar-left"><span class="topbar-title">⚖️ Government Portal</span></div>
+      <div class="topbar-right"><button class="topbar-btn" onclick="showPage('page-entry')">← Back</button></div>
+    </div>
+    <div class="container">
+      <div class="card" id="gov-auth">
+        <div class="tabs">
+          <button class="tab active" id="gtab-login"  onclick="govTab('login')">Login</button>
+          <button class="tab"        id="gtab-reg"    onclick="govTab('register')">Register</button>
+        </div>
+
+        <!-- Login panel -->
+        <div class="panel active" id="gp-login">
+          <div class="alert" id="g-login-alert"></div>
+          <div class="field"><label>Badge ID</label>
+            <input type="text" id="g-badge" placeholder="e.g. GOV-001"/></div>
+          <div class="field"><label>Password</label>
+            <input type="password" id="g-pass" placeholder="Your password"/></div>
+          <div class="field"><label>Department</label>
+            <select id="g-dept">
+              <option value="">— Select department —</option>
+              <option value="justice">Ministry of Justice</option>
+              <option value="defence">Department of Defence</option>
+              <option value="health">Ministry of Health</option>
+              <option value="finance">Treasury & Finance</option>
+              <option value="interior">Ministry of the Interior</option>
+            </select></div>
+          <button class="btn btn-primary" onclick="govLogin()">Sign In</button>
+          <div class="link-text">No account? <a onclick="govTab('register')">Register here</a></div>
+        </div>
+
+        <!-- Register panel -->
+        <div class="panel" id="gp-reg">
+          <div class="alert" id="g-reg-alert"></div>
+          <div class="field"><label>Full Name</label><input type="text" id="gr-name" placeholder="Your full name"/></div>
+          <div class="field"><label>Government Email</label><input type="email" id="gr-email" placeholder="name@department.gov"/></div>
+          <div class="field"><label>Badge ID</label><input type="text" id="gr-badge" placeholder="e.g. GOV-002"/></div>
+          <div class="field"><label>Department</label>
+            <select id="gr-dept">
+              <option value="">— Select department —</option>
+              <option value="justice">Ministry of Justice</option>
+              <option value="defence">Department of Defence</option>
+              <option value="health">Ministry of Health</option>
+              <option value="finance">Treasury & Finance</option>
+              <option value="interior">Ministry of the Interior</option>
+            </select></div>
+          <div class="field"><label>Clearance Level</label>
+            <select id="gr-clearance">
+              <option value="">— Select clearance —</option>
+              <option value="1">Level 1 — Public Servant</option>
+              <option value="2">Level 2 — Official</option>
+              <option value="3">Level 3 — Confidential</option>
+              <option value="4">Level 4 — Secret</option>
+            </select></div>
+          <div class="field"><label>Password</label><input type="password" id="gr-pass" placeholder="Min. 8 characters"/></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="gr-pass2" placeholder="Repeat password"/></div>
+          <button class="btn btn-primary" onclick="govRegister()">Create Account</button>
+          <div class="link-text">Already registered? <a onclick="govTab('login')">Sign in</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 3: GOVERNMENT DASHBOARD
+  ============================================================= -->
+  <div class="page" id="page-dashboard">
+
+    <!-- Sticky topbar with official's name and sign out -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">📋 Incident Dashboard</span>
+        <span class="topbar-user" id="dash-official-name"></span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="govLogout()">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="container-wide">
+
+      <!-- ── Summary Stats ── -->
+      <div class="dash-stats">
+        <div class="stat-card sc-total">
+          <div class="s-num" id="ds-total">0</div>
+          <div class="s-lbl">Total Reports</div>
+          <div class="s-sub">All incidents</div>
+        </div>
+        <div class="stat-card sc-new">
+          <div class="s-num" id="ds-new">0</div>
+          <div class="s-lbl">New</div>
+          <div class="s-sub">Awaiting review</div>
+        </div>
+        <div class="stat-card sc-prog">
+          <div class="s-num" id="ds-prog">0</div>
+          <div class="s-lbl">In Progress</div>
+          <div class="s-sub">Being handled</div>
+        </div>
+        <div class="stat-card sc-done">
+          <div class="s-num" id="ds-done">0</div>
+          <div class="s-lbl">Completed</div>
+          <div class="s-sub">Resolved</div>
+        </div>
+      </div>
+
+      <!-- ── Two-column layout ── -->
+      <div class="dash-layout">
+
+        <!-- LEFT: report list -->
+        <div class="dash-list-panel">
+          <div class="dash-list-header">
+            <h3>Reports</h3>
+            <div class="dash-filters">
+              <button class="dash-filter-btn active" onclick="dashFilter('all',this)">All</button>
+              <button class="dash-filter-btn" onclick="dashFilter('new',this)">New</button>
+              <button class="dash-filter-btn" onclick="dashFilter('inprogress',this)">In Progress</button>
+              <button class="dash-filter-btn" onclick="dashFilter('responded',this)">Responded</button>
+              <button class="dash-filter-btn" onclick="dashFilter('completed',this)">Completed</button>
+            </div>
+          </div>
+          <!-- List of report rows, populated by JS -->
+          <div id="dash-report-list"></div>
+        </div>
+
+        <!-- RIGHT: report detail -->
+        <div class="dash-detail-panel" id="dash-detail-panel">
+          <div class="dash-detail-empty" id="dash-detail-empty">
+            <span class="dee-icon">📋</span>
+            <p>Select a report on the left to view details, update its status, and send a response.</p>
+          </div>
+          <!-- Detail content injected by JS when a report is selected -->
+          <div id="dash-detail-content" style="display:none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 4: PUBLIC USER LOGIN
+  ============================================================= -->
+  <div class="page" id="page-user">
+    <div class="topbar">
+      <div class="topbar-left"><span class="topbar-title">👤 Public Login</span></div>
+      <div class="topbar-right"><button class="topbar-btn" onclick="showPage('page-entry')">← Back</button></div>
+    </div>
+    <div class="container">
+
+      <!-- User dashboard after login -->
+      <div id="user-dash" style="display:none;">
+        <div class="card">
+          <div class="logo">
+            <span class="logo-icon">✅</span>
+            <h1>Welcome, <span id="ud-name"></span></h1>
+            <p style="color:#666;font-size:0.8rem;">Signed in as Public User</p>
+          </div>
+          <div class="info-box">
+            <div class="ib-row"><span class="ib-key">Email</span><span class="ib-val" id="ud-email"></span></div>
+            <div class="ib-row"><span class="ib-key">Signed in</span><span class="ib-val" id="ud-time"></span></div>
+          </div>
+          <button class="btn btn-primary" onclick="showPage('page-select')">Report an Incident →</button>
+          <button class="btn btn-danger"  onclick="userLogout()">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Login / register card -->
+      <div class="card" id="user-auth">
+        <div class="tabs">
+          <button class="tab active" id="utab-login" onclick="userTab('login')">Sign In</button>
+          <button class="tab"        id="utab-reg"   onclick="userTab('register')">Register</button>
+        </div>
+        <div class="panel active" id="up-login">
+          <div class="alert" id="u-login-alert"></div>
+          <div class="field"><label>Email Address</label><input type="email" id="u-email" placeholder="your@email.com"/></div>
+          <div class="field"><label>Password</label><input type="password" id="u-pass" placeholder="Your password"/></div>
+          <button class="btn btn-primary" onclick="userLogin()">Sign In</button>
+          <div class="link-text">No account? <a onclick="userTab('register')">Register free</a></div>
+        </div>
+        <div class="panel" id="up-reg">
+          <div class="alert" id="u-reg-alert"></div>
+          <div class="field"><label>Full Name</label><input type="text" id="ur-name" placeholder="Your name"/></div>
+          <div class="field"><label>Email Address</label><input type="email" id="ur-email" placeholder="your@email.com"/></div>
+          <div class="field"><label>Password</label><input type="password" id="ur-pass" placeholder="Min. 8 characters"/></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="ur-pass2" placeholder="Repeat password"/></div>
+          <button class="btn btn-primary" onclick="userRegister()">Create Account</button>
+          <div class="link-text">Already registered? <a onclick="userTab('login')">Sign in</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 5: EMERGENCY TYPE SELECTION
+  ============================================================= -->
+  <div class="page" id="page-select">
+    <div class="topbar">
+      <div class="topbar-left"><span class="topbar-title">🚨 Select Emergency Type</span></div>
+      <div class="topbar-right"><button class="topbar-btn" onclick="showPage('page-user')">← Back</button></div>
+    </div>
+    <div class="container">
+      <div class="card">
+        <p class="section-title">What type of emergency?</p>
+        <div class="type-grid">
+          <div class="type-btn" data-type="fire"       onclick="selectType(this)"><span class="ti">🔥</span><span class="tl">Fire</span></div>
+          <div class="type-btn" data-type="flood"      onclick="selectType(this)"><span class="ti">🌊</span><span class="tl">Flooding</span></div>
+          <div class="type-btn" data-type="emergency"  onclick="selectType(this)"><span class="ti">🚨</span><span class="tl">Emergency</span></div>
+          <div class="type-btn" data-type="hurricane"  onclick="selectType(this)"><span class="ti">🌀</span><span class="tl">Hurricane</span></div>
+          <div class="type-btn" data-type="earthquake" onclick="selectType(this)"><span class="ti">⚡</span><span class="tl">Earthquake</span></div>
+          <!-- Other / Custom Issue tile — spans full width on its own row -->
+          <div class="type-btn" data-type="other" onclick="selectType(this)"
+               style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px;">
+            <span class="ti" style="font-size:1.3rem; margin-bottom:0;">✏️</span>
+            <span class="tl" style="font-size:0.78rem;">Other / Custom Issue</span>
+          </div>
+        </div>
+
+        <!-- Custom issue input — only visible when "Other" is selected -->
+        <div class="custom-issue-wrap" id="custom-issue-wrap">
+          <label for="custom-issue-input">Describe your issue <span style="color:#c0392b;">*</span></label>
+          <input type="text" id="custom-issue-input"
+                 placeholder="e.g. Power line down, road collapse, chemical spill…"
+                 oninput="clearAlert('type-alert')"/>
+        </div>
+
+        <div class="alert" id="type-alert"></div>
+        <button class="btn btn-primary" onclick="continueToReport()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PAGE 6: INCIDENT REPORT FORM
+  ============================================================= -->
+  <div class="page" id="page-report">
+    <div class="topbar">
+      <div class="topbar-left"><span class="topbar-title" id="report-topbar-title">Incident Report</span></div>
+      <div class="topbar-right"><button class="topbar-btn" onclick="showPage('page-select')">← Back</button></div>
+    </div>
+    <div class="container-wide" style="max-width:680px;">
+
+      <div class="alert" id="report-alert" style="margin-bottom:14px;"></div>
+
+      <div class="card">
+        <p class="section-title">Incident Details</p>
+        <div class="field"><label>Brief Title *</label><input type="text" id="r-title" placeholder="e.g. House fire on Main Street"/></div>
+        <div class="field"><label>Date & Time *</label><input type="datetime-local" id="r-datetime"/></div>
+        <div class="field"><label>Description *</label><textarea id="r-desc" placeholder="Describe the situation — damage, injuries, number of people affected…"></textarea></div>
+        <div class="field">
+          <label>Severity *</label>
+          <div class="sev-row">
+            <button class="sev-btn" data-sev="low"    onclick="selectSev(this)">🟢 Low</button>
+            <button class="sev-btn" data-sev="medium" onclick="selectSev(this)">🟡 Medium</button>
+            <button class="sev-btn" data-sev="high"   onclick="selectSev(this)">🔴 High</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <p class="section-title">Location</p>
+        <div class="field"><label>Parish *</label>
+          <select id="r-parish">
+            <option value="">— Select parish —</option>
+            <option>Kingston</option><option>St. Andrew</option><option>St. Thomas</option>
+            <option>Portland</option><option>St. Mary</option><option>St. Ann</option>
+            <option>Trelawny</option><option>St. James</option><option>Hanover</option>
+            <option>Westmoreland</option><option>St. Elizabeth</option><option>Manchester</option>
+            <option>Clarendon</option><option>St. Catherine</option>
+          </select></div>
+        <div class="field"><label>Address / Nearest Landmark *</label>
+          <input type="text" id="r-address" placeholder="e.g. 14 Main Street, near the plaza"/></div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <p class="section-title">Your Contact Details</p>
+        <div class="field"><label>Full Name *</label><input type="text" id="r-name" placeholder="Your name"/></div>
+        <div class="field"><label>Phone Number *</label><input type="tel" id="r-phone" placeholder="(876) 555-0000"/></div>
+        <div class="field"><label>Email (optional)</label><input type="email" id="r-email" placeholder="your@email.com"/></div>
+        <button class="btn btn-primary" style="margin-top:6px;" onclick="submitReport()">Submit Report</button>
+      </div>
+
+      <!-- Public view of submitted reports -->
+      <div style="margin-top:22px;">
+        <h2 style="font-size:0.95rem;font-weight:700;margin-bottom:10px;">
+          Your Submitted Reports
+          <span id="report-count" style="font-weight:400;color:#999;font-size:0.78rem;margin-left:6px;"></span>
+        </h2>
+        <div id="reports-list"><div class="no-reports">No reports yet</div></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================= -->
+  <script>
+
+    /* ============================================================
+       SHARED DATA STORE
+       All reports live here. Both public and government views
+       read and write from this same array.
+    ============================================================= */
+    const REPORTS = [
+      /* Seeded demo reports so the dashboard is not empty on first login */
+      {
+        id: 1001, type: 'fire', title: 'House fire on Braeton Parkway',
+        dt: '2025-06-14T08:32', desc: 'Two-storey house fully alight. Occupants evacuated. Fire spreading to adjacent property.',
+        sev: 'high', parish: 'St. Catherine', address: '14 Braeton Parkway, Portmore',
+        name: 'Devon Campbell', phone: '(876) 551-0024', email: '',
+        status: 'new', responses: [],
+        submitted: new Date(Date.now() - 3600000).toLocaleString()
+      },
+      {
+        id: 1002, type: 'flood', title: 'Flash flooding on Spanish Town Bypass',
+        dt: '2025-06-14T06:15', desc: 'Heavy overnight rainfall. Water level approximately 1 metre. Multiple vehicles stranded.',
+        sev: 'high', parish: 'St. Catherine', address: 'Spanish Town Bypass near market',
+        name: 'Nadine Brown', phone: '(876) 403-7712', email: 'nadine@email.com',
+        status: 'inprogress',
+        responses: [{ text: 'NWA drainage team dispatched. Road closure in effect. Expect clearance by 14:00.', by: 'Margaret Osei', at: new Date(Date.now() - 1800000).toLocaleString() }],
+        submitted: new Date(Date.now() - 7200000).toLocaleString()
+      },
+      {
+        id: 1003, type: 'emergency', title: 'Gas leak at Half Way Tree Plaza',
+        dt: '2025-06-14T11:00', desc: 'Strong gas smell in food court. Plaza evacuated. JFB hazmat requested.',
+        sev: 'high', parish: 'St. Andrew', address: 'Constant Spring Road, Half Way Tree',
+        name: 'Sandra Mitchell', phone: '(876) 754-2288', email: '',
+        status: 'new', responses: [],
+        submitted: new Date(Date.now() - 1200000).toLocaleString()
+      },
+      {
+        id: 1004, type: 'flood', title: 'Blocked drain — street flooding',
+        dt: '2025-06-13T16:45', desc: 'Blocked storm drain causing persistent flooding. Third report filed. Vehicles cannot pass.',
+        sev: 'medium', parish: 'Kingston', address: 'Marcus Garvey Drive, Kingston 13',
+        name: 'Patricia Hall', phone: '(876) 557-6614', email: '',
+        status: 'completed',
+        responses: [
+          { text: 'NWA crew assigned. Drain cleared.', by: 'Margaret Osei', at: new Date(Date.now() - 86400000).toLocaleString() },
+          { text: 'Confirmed resolved. Marked complete.', by: 'Margaret Osei', at: new Date(Date.now() - 43200000).toLocaleString() }
+        ],
+        submitted: new Date(Date.now() - 90000000).toLocaleString()
+      },
+      {
+        id: 1005, type: 'earthquake', title: 'Earthquake — minor structural damage',
+        dt: '2025-06-11T03:14', desc: 'Magnitude 3.8 tremor. Cracked walls in two buildings. No injuries. ODPEM assessment needed.',
+        sev: 'low', parish: 'Kingston', address: 'Port Royal Street, Downtown Kingston',
+        name: 'Joseph Grant', phone: '(876) 882-4450', email: '',
+        status: 'responded',
+        responses: [{ text: 'ODPEM structural team scheduled for assessment on June 15.', by: 'Margaret Osei', at: new Date(Date.now() - 172800000).toLocaleString() }],
+        submitted: new Date(Date.now() - 259200000).toLocaleString()
+      }
+    ];
+
+    /* ============================================================
+       GLOBAL STATE
+    ============================================================= */
+    let selectedType        = '';
+    let selectedSev         = '';
+    let selectedCustomIssue = '';   /* Stores free-text when "Other" is chosen */
+    let currentFilter       = 'all';
+    let selectedReportId    = null;
+    let loggedInGovUser     = null;
+
+    /* ============================================================
+       PAGE NAVIGATION
+    ============================================================= */
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    /* ============================================================
+       ALERT HELPERS
+    ============================================================= */
+    function showAlert(id, type, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `alert alert-${type} show`;
+    }
+    function clearAlert(id) {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.className = 'alert';
+    }
+
+    /* ============================================================
+       UTILITIES
+    ============================================================= */
+    function strongPw(pw)   { return pw.length >= 8 && /[0-9]/.test(pw); }
+    function validEmail(e)  { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
+    function govEmail(e)    { return /\.gov(\.[a-z]{2})?$/i.test(e.trim()); }
+    function validBadge(id) { return /^[A-Z]{2,6}-\d{2,6}$/i.test(id.trim()); }
+
+    /* Escape HTML to prevent XSS */
+    function esc(s) {
+      if (!s) return '';
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* Human-readable status label + dot class */
+    const STATUS_META = {
+      new:        { label: 'New',         dot: 'dot-new',        cls: 'status-new' },
+      inprogress: { label: 'In Progress', dot: 'dot-inprogress', cls: 'status-inprogress' },
+      responded:  { label: 'Responded',   dot: 'dot-responded',  cls: 'status-responded' },
+      completed:  { label: 'Completed',   dot: 'dot-completed',  cls: 'status-completed' }
+    };
+
+    function statusBadge(status) {
+      const m = STATUS_META[status] || STATUS_META.new;
+      return `<span class="status-badge ${m.cls}">
+        <span class="status-dot ${m.dot}"></span>${m.label}
+      </span>`;
+    }
+
+    const TYPE_ICONS = { fire:'🔥', flood:'🌊', emergency:'🚨', hurricane:'🌀', earthquake:'⚡', other:'✏️' };
+
+    /* ============================================================
+       GOVERNMENT DATA
+    ============================================================= */
+    const GOV_APPROVED = {
+      'GOV-001': { name:'Margaret Osei',       dept:'justice',  clearance:'4', email:'m.osei@justice.gov' },
+      'GOV-002': { name:'James Nakamura',      dept:'defence',  clearance:'4', email:'j.nakamura@defence.gov' },
+      'GOV-003': { name:'Amara Diallo',        dept:'health',   clearance:'2', email:'a.diallo@health.gov' },
+      'GOV-004': { name:'Bernard Kowalski',    dept:'finance',  clearance:'3', email:'b.kowalski@treasury.gov' },
+      'GOV-005': { name:'Sophia Papadopoulos', dept:'interior', clearance:'2', email:'s.papa@interior.gov' }
+    };
+    const GOV_USERS = {
+      'GOV-001': { name:'Margaret Osei', dept:'justice', clearance:'4', password:'SecureGov@1', role:'Senior Official' }
+    };
+    const DEPT_LABELS = {
+      justice:'Ministry of Justice', defence:'Department of Defence',
+      health:'Ministry of Health', finance:'Treasury & Finance', interior:'Ministry of the Interior'
+    };
+
+    /* ============================================================
+       GOV TAB
+    ============================================================= */
+    function govTab(t) {
+      document.getElementById('gtab-login').classList.toggle('active', t==='login');
+      document.getElementById('gtab-reg').classList.toggle('active',   t==='register');
+      document.getElementById('gp-login').classList.toggle('active', t==='login');
+      document.getElementById('gp-reg').classList.toggle('active',   t==='register');
+      clearAlert('g-login-alert'); clearAlert('g-reg-alert');
+    }
+
+    /* ============================================================
+       GOVERNMENT LOGIN — goes to dashboard
+    ============================================================= */
+    function govLogin() {
+      clearAlert('g-login-alert');
+      const badge = document.getElementById('g-badge').value.trim().toUpperCase();
+      const pass  = document.getElementById('g-pass').value;
+      const dept  = document.getElementById('g-dept').value;
+
+      if (!badge || !pass || !dept) { showAlert('g-login-alert','error','Please fill in all fields.'); return; }
+      if (!validBadge(badge))       { showAlert('g-login-alert','error','Invalid badge ID format.'); return; }
+
+      const user = GOV_USERS[badge];
+      if (!user)                    { showAlert('g-login-alert','error','Badge ID not found. Please register first.'); return; }
+      if (user.password !== pass)   { showAlert('g-login-alert','error','Incorrect password.'); return; }
+      if (user.dept !== dept)       { showAlert('g-login-alert','error','Department does not match.'); return; }
+
+      /* Store logged-in user and go to dashboard */
+      loggedInGovUser = { badge, ...user };
+      document.getElementById('dash-official-name').textContent = user.name + ' · ' + (DEPT_LABELS[user.dept] || user.dept);
+      renderDashboard();
+      showPage('page-dashboard');
+    }
+
+    /* ============================================================
+       GOVERNMENT REGISTER
+    ============================================================= */
+    function govRegister() {
+      clearAlert('g-reg-alert');
+      const name = document.getElementById('gr-name').value.trim();
+      const email = document.getElementById('gr-email').value.trim().toLowerCase();
+      const badge = document.getElementById('gr-badge').value.trim().toUpperCase();
+      const dept  = document.getElementById('gr-dept').value;
+      const cl    = document.getElementById('gr-clearance').value;
+      const pass  = document.getElementById('gr-pass').value;
+      const pass2 = document.getElementById('gr-pass2').value;
+
+      if (!name||!email||!badge||!dept||!cl||!pass||!pass2) { showAlert('g-reg-alert','error','Please fill in all fields.'); return; }
+      if (!govEmail(email)) { showAlert('g-reg-alert','error','A .gov email address is required.'); return; }
+      const off = GOV_APPROVED[badge];
+      if (!off)               { showAlert('g-reg-alert','error','Badge ID not in approved list.'); return; }
+      if (GOV_USERS[badge])   { showAlert('g-reg-alert','info','Already registered. Please sign in.'); return; }
+      if (off.email !== email){ showAlert('g-reg-alert','error','Email does not match the record.'); return; }
+      if (off.dept  !== dept) { showAlert('g-reg-alert','error','Department does not match.'); return; }
+      if (off.clearance !== cl){ showAlert('g-reg-alert','error','Clearance level does not match.'); return; }
+      if (!strongPw(pass))    { showAlert('g-reg-alert','error','Password must be 8+ chars and include a number.'); return; }
+      if (pass !== pass2)     { showAlert('g-reg-alert','error','Passwords do not match.'); return; }
+
+      GOV_USERS[badge] = { name, dept, clearance:cl, password:pass, role: cl>='3'?'Senior Official':'Official' };
+      showAlert('g-reg-alert','success','✔ Account created! You can now sign in.');
+      setTimeout(() => { govTab('login'); document.getElementById('g-badge').value=badge; }, 1800);
+    }
+
+    /* ============================================================
+       GOVERNMENT LOGOUT
+    ============================================================= */
+    function govLogout() {
+      loggedInGovUser  = null;
+      selectedReportId = null;
+      ['g-badge','g-pass'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('g-dept').value='';
+      govTab('login');
+      showPage('page-entry');
+    }
+
+
+    /* ============================================================
+       DASHBOARD — RENDER LIST
+       Builds the left-side list of report rows, filtered by
+       the active filter button.
+    ============================================================= */
+    function renderDashboard() {
+      /* Update stats */
+      document.getElementById('ds-total').textContent = REPORTS.length;
+      document.getElementById('ds-new').textContent   = REPORTS.filter(r=>r.status==='new').length;
+      document.getElementById('ds-prog').textContent  = REPORTS.filter(r=>r.status==='inprogress').length;
+      document.getElementById('ds-done').textContent  = REPORTS.filter(r=>r.status==='completed').length;
+
+      /* Filter */
+      const filtered = currentFilter === 'all'
+        ? [...REPORTS]
+        : REPORTS.filter(r => r.status === currentFilter);
+
+      const list = document.getElementById('dash-report-list');
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="no-reports" style="margin:20px;">No reports match this filter.</div>';
+        return;
+      }
+
+      /* Sort: new & inprogress first, then by most recent */
+      const order = { new:0, inprogress:1, responded:2, completed:3 };
+      filtered.sort((a,b) => (order[a.status]||0) - (order[b.status]||0));
+
+      list.innerHTML = filtered.map(r => {
+        /* For "other" type, show the custom issue text as the type label in the badge */
+        const typeBadgeLabel = r.type === 'other' && r.customIssue ? r.customIssue : r.type;
+        const typeBadgeCls   = r.type === 'other' ? 'badge-other' : `badge-${r.type}`;
+        return `
+        <div class="dash-report-row ${selectedReportId===r.id?'selected':''}"
+             onclick="selectReport(${r.id})">
+          <div class="drr-top">
+            <div class="drr-title">${TYPE_ICONS[r.type]||'📋'} ${esc(r.title)}</div>
+            ${statusBadge(r.status)}
+          </div>
+          <div class="drr-meta">
+            <span class="badge" style="${r.type==='other'?'background:#f0eeff;color:#4b44cc;':''}"
+                  class="badge-${r.type}">${esc(typeBadgeLabel)}</span>
+            <span class="badge badge-${r.sev}">${r.sev}</span>
+            <span>🕐 ${esc(r.submitted)}</span>
+          </div>
+          <div class="drr-location">
+            📍 ${esc(r.parish)} — ${esc(r.address)}
+          </div>
+        </div>
+      `}).join('');
+
+      /* If a report was previously selected, re-render its detail */
+      if (selectedReportId) renderDetail(selectedReportId);
+    }
+
+
+    /* ============================================================
+       DASHBOARD — SELECT REPORT
+       Called when a report row is clicked. Renders the right-side
+       detail panel for the selected report.
+    ============================================================= */
+    function selectReport(id) {
+      selectedReportId = id;
+      renderDashboard();   /* re-render list to highlight selection */
+      renderDetail(id);
+    }
+
+
+    /* ============================================================
+       DASHBOARD — RENDER DETAIL PANEL
+       Shows full report info, status buttons, and response area.
+    ============================================================= */
+    function renderDetail(id) {
+      const r = REPORTS.find(x => x.id === id);
+      if (!r) return;
+
+      document.getElementById('dash-detail-empty').style.display   = 'none';
+      document.getElementById('dash-detail-content').style.display = 'block';
+
+      /* Build the saved responses list HTML */
+      const responsesHTML = r.responses && r.responses.length > 0
+        ? `<div class="saved-responses">
+            <div class="detail-section-label" style="margin-bottom:8px;">Previous Responses</div>
+            ${r.responses.map(resp => `
+              <div class="saved-response-item">
+                <div class="sri-meta">
+                  <span>💬 ${esc(resp.by)}</span>
+                  <span>·</span>
+                  <span>${esc(resp.at)}</span>
+                </div>
+                <div class="sri-text">${esc(resp.text)}</div>
+              </div>
+            `).join('')}
+           </div>`
+        : '';
+
+      /* Status button active states */
+      const stBtns = ['new','inprogress','responded','completed'].map(s => `
+        <button class="st-btn st-${s} ${r.status===s?'on':''}"
+                onclick="updateStatus(${r.id},'${s}')">
+          ${{new:'🔵 New',inprogress:'🟡 In Progress',responded:'✉️ Responded',completed:'✅ Completed'}[s]}
+        </button>
+      `).join('');
+
+      /* For "other" type, display the custom issue text as the type badge label */
+      const typeDisplayLabel = (r.type === 'other' && r.customIssue) ? r.customIssue : r.type;
+      const typeBadgeStyle   = r.type === 'other' ? 'background:#f0eeff;color:#4b44cc;' : '';
+
+      document.getElementById('dash-detail-content').innerHTML = `
+
+        <!-- Header -->
+        <div class="detail-header">
+          <div class="detail-header-left">
+            <h2>${TYPE_ICONS[r.type]||'📋'} ${esc(r.title)}</h2>
+            <div class="detail-header-badges">
+              <span class="badge" style="${typeBadgeStyle}">${esc(typeDisplayLabel)}</span>
+              <span class="badge badge-${r.sev}">${r.sev} risk</span>
+              ${statusBadge(r.status)}
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-body">
+
+          <!-- Meta info grid: time, location, reporter -->
+          <div class="detail-meta-grid">
+            <div class="meta-cell">
+              <div class="mc-key">🕐 Time Submitted</div>
+              <div class="mc-val">${esc(r.submitted)}</div>
+            </div>
+            <div class="meta-cell">
+              <div class="mc-key">📅 Incident Time</div>
+              <div class="mc-val">${esc(r.dt.replace('T',' '))}</div>
+            </div>
+            <div class="meta-cell">
+              <div class="mc-key">📍 Parish</div>
+              <div class="mc-val">${esc(r.parish)}</div>
+            </div>
+            <div class="meta-cell">
+              <div class="mc-key">🏠 Address</div>
+              <div class="mc-val">${esc(r.address)}</div>
+            </div>
+            <div class="meta-cell">
+              <div class="mc-key">👤 Reporter</div>
+              <div class="mc-val">${esc(r.name)}</div>
+            </div>
+            <div class="meta-cell">
+              <div class="mc-key">📞 Phone</div>
+              <div class="mc-val">${esc(r.phone)}</div>
+            </div>
+            ${r.email ? `<div class="meta-cell" style="grid-column:1/-1;">
+              <div class="mc-key">✉️ Email</div>
+              <div class="mc-val">${esc(r.email)}</div>
+            </div>` : ''}
+            ${r.type === 'other' && r.customIssue ? `<div class="meta-cell" style="grid-column:1/-1; border:1.5px solid #6c63ff;">
+              <div class="mc-key" style="color:#4b44cc;">✏️ Custom Issue Type</div>
+              <div class="mc-val" style="color:#4b44cc;">${esc(r.customIssue)}</div>
+            </div>` : ''}
+          </div>
+
+          <!-- Description -->
+          <div class="detail-desc-label">Description</div>
+          <div class="detail-desc">${esc(r.desc)}</div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Status update -->
+          <div class="detail-section-label">Update Status</div>
+          <div class="status-btn-row">${stBtns}</div>
+
+          <div class="detail-divider"></div>
+
+          <!-- Previous responses -->
+          ${responsesHTML}
+
+          <!-- Respond section -->
+          <div class="detail-section-label" style="margin-top:${r.responses&&r.responses.length?'14px':'0'};">
+            ${r.responses&&r.responses.length ? 'Add Another Response' : 'Respond to This Report'}
+          </div>
+          <div class="response-area">
+            <textarea id="resp-textarea-${r.id}"
+              placeholder="Write your official response — actions taken, agencies dispatched, advice for the public, next steps…"></textarea>
+            <button class="btn-respond" onclick="sendResponse(${r.id})">
+              ✉️ Send Response
+            </button>
+          </div>
+
+        </div>
+      `;
+    }
+
+
+    /* ============================================================
+       UPDATE STATUS
+       Changes a report's status and re-renders both panels.
+    ============================================================= */
+    function updateStatus(id, newStatus) {
+      const r = REPORTS.find(x => x.id === id);
+      if (r) r.status = newStatus;
+      renderDashboard();
+    }
+
+
+    /* ============================================================
+       SEND RESPONSE
+       Saves the typed response to the report's responses array,
+       auto-advances status to 'responded' if it was new/inprogress,
+       then re-renders both panels.
+    ============================================================= */
+    function sendResponse(id) {
+      const r       = REPORTS.find(x => x.id === id);
+      const textarea = document.getElementById(`resp-textarea-${id}`);
+      if (!r || !textarea) return;
+
+      const text = textarea.value.trim();
+      if (!text) { alert('Please write a response before sending.'); return; }
+
+      /* Add to the responses array */
+      r.responses.push({
+        text,
+        by: loggedInGovUser ? loggedInGovUser.name : 'Official',
+        at: new Date().toLocaleString()
+      });
+
+      /* Auto-update status: new → responded, inprogress → responded */
+      if (r.status === 'new' || r.status === 'inprogress') {
+        r.status = 'responded';
+      }
+
+      /* Re-render everything */
+      renderDashboard();
+    }
+
+
+    /* ============================================================
+       DASHBOARD FILTER
+    ============================================================= */
+    function dashFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderDashboard();
+    }
+
+
+    /* ============================================================
+       PUBLIC USER DATA
+    ============================================================= */
+    const USER_ACCOUNTS = {
+      'demo@example.com': { name:'Alex Johnson', email:'demo@example.com', password:'Password1' }
+    };
+
+    function userTab(t) {
+      document.getElementById('utab-login').classList.toggle('active', t==='login');
+      document.getElementById('utab-reg').classList.toggle('active',   t==='register');
+      document.getElementById('up-login').classList.toggle('active', t==='login');
+      document.getElementById('up-reg').classList.toggle('active',   t==='register');
+      clearAlert('u-login-alert'); clearAlert('u-reg-alert');
+    }
+
+    function userLogin() {
+      clearAlert('u-login-alert');
+      const email = document.getElementById('u-email').value.trim().toLowerCase();
+      const pass  = document.getElementById('u-pass').value;
+      if (!email||!pass)    { showAlert('u-login-alert','error','Please enter your email and password.'); return; }
+      if (!validEmail(email)){ showAlert('u-login-alert','error','Please enter a valid email.'); return; }
+      if (govEmail(email))  { showAlert('u-login-alert','error','Government emails must use the Government login.'); return; }
+      const acc = USER_ACCOUNTS[email];
+      if (!acc)             { showAlert('u-login-alert','error','No account found. Please register first.'); return; }
+      if (acc.password!==pass){ showAlert('u-login-alert','error','Incorrect password.'); return; }
+      document.getElementById('user-auth').style.display='none';
+      document.getElementById('user-dash').style.display='block';
+      document.getElementById('ud-name').textContent  = acc.name;
+      document.getElementById('ud-email').textContent = acc.email;
+      document.getElementById('ud-time').textContent  = new Date().toLocaleTimeString();
+    }
+
+    function userRegister() {
+      clearAlert('u-reg-alert');
+      const name=document.getElementById('ur-name').value.trim();
+      const email=document.getElementById('ur-email').value.trim().toLowerCase();
+      const pass=document.getElementById('ur-pass').value;
+      const pass2=document.getElementById('ur-pass2').value;
+      if (!name||!email||!pass||!pass2){ showAlert('u-reg-alert','error','Please fill in all fields.'); return; }
+      if (!validEmail(email))         { showAlert('u-reg-alert','error','Please enter a valid email.'); return; }
+      if (govEmail(email))            { showAlert('u-reg-alert','error','Government emails must use the Government portal.'); return; }
+      if (USER_ACCOUNTS[email])       { showAlert('u-reg-alert','info','An account with this email already exists.'); return; }
+      if (!strongPw(pass))            { showAlert('u-reg-alert','error','Password must be 8+ chars and include a number.'); return; }
+      if (pass!==pass2)               { showAlert('u-reg-alert','error','Passwords do not match.'); return; }
+      USER_ACCOUNTS[email]={name,email,password:pass};
+      showAlert('u-reg-alert','success','✔ Account created! You can now sign in.');
+      setTimeout(()=>{ userTab('login'); document.getElementById('u-email').value=email; },1800);
+    }
+
+    function userLogout() {
+      document.getElementById('user-dash').style.display='none';
+      document.getElementById('user-auth').style.display='';
+      ['u-email','u-pass'].forEach(id=>document.getElementById(id).value='');
+      userTab('login');
+      showAlert('u-login-alert','info','You have been signed out.');
+    }
+
+
+    /* ============================================================
+       EMERGENCY TYPE SELECTION
+    ============================================================= */
+    function selectType(tile) {
+      document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('selected'));
+      tile.classList.add('selected');
+      selectedType = tile.dataset.type;
+      clearAlert('type-alert');
+
+      /* Show the custom issue text input only when "Other" is selected */
+      const customWrap = document.getElementById('custom-issue-wrap');
+      if (selectedType === 'other') {
+        customWrap.classList.add('visible');
+        document.getElementById('custom-issue-input').focus();
+      } else {
+        customWrap.classList.remove('visible');
+        document.getElementById('custom-issue-input').value = '';
+      }
+    }
+
+    function continueToReport() {
+      if (!selectedType) {
+        showAlert('type-alert','error','Please select a type of emergency first.'); return;
+      }
+
+      /* If "Other" is selected, the custom description field must be filled */
+      if (selectedType === 'other') {
+        const customText = document.getElementById('custom-issue-input').value.trim();
+        if (!customText) {
+          showAlert('type-alert','error','Please describe your issue in the field above.'); return;
+        }
+        /* Store the custom description so it appears in the report topbar and dashboard */
+        selectedCustomIssue = customText;
+        document.getElementById('report-topbar-title').textContent = '✏️ ' + customText;
+      } else {
+        selectedCustomIssue = '';
+        const labels = {
+          fire:'🔥 Fire Report', flood:'🌊 Flood Report',
+          emergency:'🚨 Emergency Report', hurricane:'🌀 Hurricane Report',
+          earthquake:'⚡ Earthquake Report'
+        };
+        document.getElementById('report-topbar-title').textContent = labels[selectedType] || 'Incident Report';
+      }
+
+      showPage('page-report');
+    }
+
+    function selectSev(btn) {
+      document.querySelectorAll('.sev-btn').forEach(b=>b.classList.remove('sel-low','sel-medium','sel-high'));
+      btn.classList.add('sel-'+btn.dataset.sev);
+      selectedSev = btn.dataset.sev;
+    }
+
+
+    /* ============================================================
+       SUBMIT REPORT — adds to REPORTS store, visible on gov dash
+    ============================================================= */
+    function submitReport() {
+      clearAlert('report-alert');
+      const title  = document.getElementById('r-title').value.trim();
+      const dt     = document.getElementById('r-datetime').value;
+      const desc   = document.getElementById('r-desc').value.trim();
+      const parish = document.getElementById('r-parish').value;
+      const addr   = document.getElementById('r-address').value.trim();
+      const name   = document.getElementById('r-name').value.trim();
+      const phone  = document.getElementById('r-phone').value.trim();
+
+      if (!title)      { showAlert('report-alert','error','Please enter a title.'); return; }
+      if (!dt)         { showAlert('report-alert','error','Please enter the date and time.'); return; }
+      if (!desc)       { showAlert('report-alert','error','Please add a description.'); return; }
+      if (!selectedSev){ showAlert('report-alert','error','Please select a severity level.'); return; }
+      if (!parish)     { showAlert('report-alert','error','Please select a parish.'); return; }
+      if (!addr)       { showAlert('report-alert','error','Please enter the address or landmark.'); return; }
+      if (!name)       { showAlert('report-alert','error','Please enter your name.'); return; }
+      if (!phone)      { showAlert('report-alert','error','Please enter your phone number.'); return; }
+
+      const report = {
+        id: Date.now(), type: selectedType, title, dt, desc,
+        sev: selectedSev, parish, address: addr, name, phone,
+        email: document.getElementById('r-email').value.trim(),
+        /* Store the custom issue label so the dashboard can show it correctly */
+        customIssue: selectedCustomIssue || '',
+        status: 'new', responses: [],
+        submitted: new Date().toLocaleString()
+      };
+
+      REPORTS.unshift(report);
+
+      showAlert('report-alert','success',`✔ Report submitted! Reference ID: #${report.id}`);
+
+      ['r-title','r-datetime','r-desc','r-address','r-name','r-phone','r-email']
+        .forEach(id=>document.getElementById(id).value='');
+      document.getElementById('r-parish').value='';
+      document.querySelectorAll('.sev-btn').forEach(b=>b.classList.remove('sel-low','sel-medium','sel-high'));
+      /* Reset custom issue state and hide the custom input */
+      selectedSev='';
+      selectedCustomIssue='';
+      document.getElementById('custom-issue-input').value='';
+      document.getElementById('custom-issue-wrap').classList.remove('visible');
+      document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('selected'));
+      selectedType='';
+
+      renderPublicReports();
+    }
+
+
+    /* ============================================================
+       RENDER PUBLIC REPORTS LIST
+       Shows submitted reports with status and any official response
+    ============================================================= */
+    function renderPublicReports() {
+      const container = document.getElementById('reports-list');
+      const count     = document.getElementById('report-count');
+
+      /* Only show reports created this session (not the seeded demo ones) */
+      const mine = REPORTS.filter(r => r.id > 10000);
+
+      count.textContent = mine.length > 0 ? `(${mine.length})` : '';
+
+      if (mine.length === 0) {
+        container.innerHTML = '<div class="no-reports">No reports yet</div>';
+        return;
+      }
+
+      container.innerHTML = mine.map(r => {
+        const typeLabel = r.type === 'other' && r.customIssue ? r.customIssue : r.type;
+        const typeStyle = r.type === 'other' ? 'style="background:#f0eeff;color:#4b44cc;"' : `class="badge badge-${r.type}"`;
+        return `
+        <div class="report-item">
+          <div class="report-item-top">
+            <span class="report-item-title">${TYPE_ICONS[r.type]||'📋'} ${esc(r.title)}</span>
+            ${statusBadge(r.status)}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+            <span class="badge" ${typeStyle}>${esc(typeLabel)}</span>
+            <span class="badge badge-${r.sev}">${r.sev} risk</span>
+            <span style="font-size:0.72rem;color:#888;">📍 ${esc(r.parish)}</span>
+          </div>
+          <div class="report-meta">🕐 ${esc(r.submitted)} · ID #${r.id}</div>
+          ${r.responses && r.responses.length > 0 ? r.responses.map(resp => `
+            <div class="official-response">
+              <strong>Official Response — ${esc(resp.by)} · ${esc(resp.at)}</strong>
+              ${esc(resp.text)}
+            </div>
+          `).join('') : ''}
+        </div>
+      `}).join('');
+    }
+
+
+    /* ============================================================
+       INITIALISATION
+    ============================================================= */
+    (function init() {
+      const now=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      document.getElementById('r-datetime').value=
+        `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key!=='Enter') return;
+      const active=document.querySelector('.page.active');
+      if (!active) return;
+      if (active.id==='page-gov') {
+        document.getElementById('gp-login').classList.contains('active') ? govLogin() : govRegister();
+      } else if (active.id==='page-user') {
+        document.getElementById('up-login').classList.contains('active') ? userLogin() : userRegister();
+      }
+    });
+
+  </script>
+</body>
+</html>
