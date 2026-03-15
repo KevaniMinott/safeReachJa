@@ -1,0 +1,27 @@
+[
+  {
+    "username": "admin",
+    "passwordHash": "2efe2c98067e10dbbd466f228871b4adcf8e955c712768d16e76d6b9381bbe7c",
+    "createdAt": 1773582554764
+  },
+  {
+    "username": "persist3294",
+    "passwordHash": "3de9273e88d1153033fccc7574cc168a51022a55738bff6727ae581e8c19380f",
+    "createdAt": 1773582578248
+  },
+  {
+    "username": "dbg9932",
+    "passwordHash": "3de9273e88d1153033fccc7574cc168a51022a55738bff6727ae581e8c19380f",
+    "createdAt": 1773582634615
+  },
+  {
+    "username": "xuser1",
+    "passwordHash": "3de9273e88d1153033fccc7574cc168a51022a55738bff6727ae581e8c19380f",
+    "createdAt": 1773582782610
+  },
+  {
+    "username": "Roger",
+    "passwordHash": "a34115352a4ac5d3901e4883e31a2d8da5c2d33a75f6bb4d3f42d7c17ab310b0",
+    "createdAt": 1773583043187
+  }
+]

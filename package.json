@@ -1,0 +1,14 @@
+{
+  "name": "html-hackathon-safe-reach",
+  "version": "1.0.0",
+  "private": true,
+  "main": "node.js",
+  "scripts": {
+    "start": "node node.js",
+    "dev": "node node.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "leaflet": "^1.9.4"
+  }
+}

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Safe Reach Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-body">
+    <div class="login-panel">
+      <h1>Safe Reach</h1>
+      <p>Sign in to access the emergency map.</p>
+
+      <form id="login-form">
+        <label for="login-username">Username</label>
+        <input
+          id="login-username"
+          name="username"
+          type="text"
+          required
+          placeholder="name@example.com"
+        />
+
+        <label for="login-password">Password</label>
+        <input
+          id="login-password"
+          name="password"
+          type="password"
+          required
+          placeholder="********"
+        />
+
+        <div class="login-row">
+          <label><input id="remember-me" type="checkbox" /> Remember me</label>
+        </div>
+
+        <button type="submit" class="primary-btn">Log in</button>
+        <div id="login-message" class="login-message"></div>
+      </form>
+
+      <p class="login-footer">
+        Demo login: admin / safe123 (or override with APP_LOGIN_USER and
+        APP_LOGIN_PASS). Need an account? <a href="/register.html">Register</a>.
+      </p>
+    </div>
+
+    <script>
+      const backendOrigin = "http://localhost:3000";
+      if (window.location.origin !== backendOrigin) {
+        window.location.replace(
+          `${backendOrigin}${window.location.pathname}${window.location.search}${window.location.hash}`,
+        );
+      }
+
+      const form = document.getElementById("login-form");
+      const message = document.getElementById("login-message");
+      async function fetchApi(path, options = {}) {
+        return fetch(path, options);
+      }
+
+      async function readJsonSafe(response) {
+        const text = await response.text();
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch (_err) {
+          return null;
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const username = form.username.value.trim();
+        const password = form.password.value;
+        if (!username || !password) {
+          message.textContent = "Please enter both username and password.";
+          message.className = "login-message error";
+          return;
+        }
+
+        message.textContent = "Signing in...";
+        message.className = "login-message";
+
+        try {
+          const response = await fetchApi("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const result = await readJsonSafe(response);
+          if (!response.ok) {
+            throw new Error(
+              result?.error || `Login failed (HTTP ${response.status})`,
+            );
+          }
+
+          if (!result || !result.success) {
+            throw new Error(
+              "Login service returned an invalid response. Please try again.",
+            );
+          }
+
+          localStorage.setItem(
+            "safeReachRemember",
+            document.getElementById("remember-me").checked ? "1" : "0",
+          );
+          if (localStorage.getItem("safeReachRemember") === "1") {
+            localStorage.setItem("safeReachUser", username);
+          } else {
+            localStorage.removeItem("safeReachUser");
+          }
+
+          message.textContent = "Login successful. Redirecting...";
+          message.className = "login-message success";
+          setTimeout(() => {
+            window.location.href = "/index.html";
+          }, 500);
+        } catch (error) {
+          message.textContent = error.message || "Unable to sign in.";
+          message.className = "login-message error";
+        }
+      });
+
+      const storedUser = localStorage.getItem("safeReachUser");
+      const remembered = localStorage.getItem("safeReachRemember") === "1";
+      if (storedUser && remembered) {
+        document.getElementById("login-username").value = storedUser;
+        document.getElementById("remember-me").checked = true;
+      }
+
+      fetchApi("/api/auth/me")
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "/index.html";
+          }
+        })
+        .catch(() => {
+          // stay on login when auth check fails
+        });
+    </script>
+  </body>
+</html>

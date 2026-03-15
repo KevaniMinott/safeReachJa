@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Safe Reach Register</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-body">
+    <div class="login-panel">
+      <h1>Create Account</h1>
+      <p>Register to access the emergency map.</p>
+
+      <form id="register-form">
+        <label for="register-username">Username</label>
+        <input
+          id="register-username"
+          name="username"
+          type="text"
+          required
+          minlength="3"
+          placeholder="Choose a username"
+        />
+
+        <label for="register-password">Password</label>
+        <input
+          id="register-password"
+          name="password"
+          type="password"
+          required
+          minlength="6"
+          placeholder="At least 6 characters"
+        />
+
+        <label for="register-confirm">Confirm Password</label>
+        <input
+          id="register-confirm"
+          name="confirmPassword"
+          type="password"
+          required
+          minlength="6"
+          placeholder="Re-enter password"
+        />
+
+        <button type="submit" class="primary-btn">Create account</button>
+        <div id="register-message" class="login-message"></div>
+      </form>
+
+      <p class="login-footer">
+        Already have an account? <a href="/login.html">Log in</a>
+      </p>
+    </div>
+
+    <script>
+      const backendOrigin = "http://localhost:3000";
+      if (window.location.origin !== backendOrigin) {
+        window.location.replace(
+          `${backendOrigin}${window.location.pathname}${window.location.search}${window.location.hash}`,
+        );
+      }
+
+      const form = document.getElementById("register-form");
+      const message = document.getElementById("register-message");
+      async function fetchApi(path, options = {}) {
+        return fetch(path, options);
+      }
+
+      async function readJsonSafe(response) {
+        const text = await response.text();
+        if (!text) return null;
+        try {
+          return JSON.parse(text);
+        } catch (_err) {
+          return null;
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const username = form.username.value.trim();
+        const password = form.password.value;
+        const confirmPassword = form.confirmPassword.value;
+
+        if (!username || !password || !confirmPassword) {
+          message.textContent = "Please fill all fields.";
+          message.className = "login-message error";
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          message.textContent = "Passwords do not match.";
+          message.className = "login-message error";
+          return;
+        }
+
+        message.textContent = "Creating account...";
+        message.className = "login-message";
+
+        try {
+          const response = await fetchApi("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, confirmPassword }),
+          });
+
+          const result = await readJsonSafe(response);
+          if (!response.ok) {
+            throw new Error(
+              result?.error || `Registration failed (HTTP ${response.status})`,
+            );
+          }
+
+          if (!result || !result.success) {
+            throw new Error(
+              "Registration service returned an invalid response.",
+            );
+          }
+
+          message.textContent = "Account created. Redirecting to login...";
+          message.className = "login-message success";
+
+          setTimeout(() => {
+            window.location.href = "/login.html";
+          }, 700);
+        } catch (error) {
+          message.textContent = error.message || "Unable to register.";
+          message.className = "login-message error";
+        }
+      });
+
+      fetchApi("/api/auth/me")
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = "/index.html";
+          }
+        })
+        .catch(() => {
+          // stay on register when auth check fails
+        });
+    </script>
+  </body>
+</html>

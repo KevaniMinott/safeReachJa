@@ -1,1336 +1,249 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Safe Reach JA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <head>
+    <title>Safe reach map</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #f4f4f4; color: #1a1a1a; min-height: 100vh; }
-
-    .page { display: none; }
-    .page.active { display: block; }
-
-    .container { max-width: 460px; margin: 60px auto; padding: 0 16px; }
-    .container-wide { max-width: 700px; margin: 0 auto; padding: 28px 16px 48px; }
-
-    .card {
-      background: #fff; border: 1px solid #e0e0e0;
-      border-radius: 10px; padding: 36px 32px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-
-    .logo { text-align: center; margin-bottom: 28px; }
-    .logo-icon { font-size: 2.2rem; display: block; margin-bottom: 8px; }
-    .logo h1 { font-size: 1.25rem; font-weight: 700; }
-    .logo p { font-size: 0.8rem; color: #666; margin-top: 3px; }
-
-    .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; }
-
-    .field { margin-bottom: 16px; }
-    label { display: block; font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 6px; }
-
-    input, select, textarea {
-      width: 100%; padding: 10px 13px;
-      border: 1px solid #d0d0d0; border-radius: 6px;
-      font-family: 'Inter', sans-serif; font-size: 0.9rem;
-      color: #1a1a1a; background: #fff; outline: none;
-      transition: border-color 0.2s; -webkit-appearance: none;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: #2a6049; box-shadow: 0 0 0 3px rgba(42,96,73,0.1);
-    }
-    textarea { resize: vertical; min-height: 90px; }
-    input::placeholder, textarea::placeholder { color: #aaa; }
-
-    .btn {
-      display: block; width: 100%; padding: 11px; border: none;
-      border-radius: 6px; font-family: 'Inter', sans-serif;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer;
-      text-align: center; transition: opacity 0.15s, transform 0.1s;
-    }
-    .btn:hover  { opacity: 0.88; transform: translateY(-1px); }
-    .btn:active { transform: none; }
-    .btn-primary { background: #2a6049; color: #fff; }
-    .btn-danger  { background: #c0392b; color: #fff; margin-top: 10px; }
-
-    .alert {
-      display: none; padding: 10px 14px; border-radius: 6px;
-      font-size: 0.82rem; line-height: 1.5; margin-bottom: 16px; border-left: 4px solid;
-    }
-    .alert.show { display: block; }
-    .alert-error   { background: #fdf0ef; border-color: #c0392b; color: #922b21; }
-    .alert-success { background: #edf7f2; border-color: #2a6049; color: #1e5c3a; }
-    .alert-info    { background: #fffbe6; border-color: #f0a500; color: #7d5a00; }
-
-    .tabs { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 24px; }
-    .tab {
-      flex: 1; padding: 10px; background: none; border: none;
-      font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
-      color: #999; cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -2px; transition: color 0.2s, border-color 0.2s;
-    }
-    .tab.active { color: #2a6049; border-bottom-color: #2a6049; }
-
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    .link-text { font-size: 0.8rem; color: #666; text-align: center; margin-top: 14px; }
-    .link-text a { color: #2a6049; font-weight: 600; cursor: pointer; text-decoration: none; }
-    .link-text a:hover { text-decoration: underline; }
-
-    .portal-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .choice-btn {
-      padding: 18px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
-      background: #fff; cursor: pointer; text-align: center;
-      transition: border-color 0.2s, background 0.2s; font-family: 'Inter', sans-serif;
-    }
-    .choice-btn:hover { border-color: #2a6049; background: #f0f7f4; }
-    .choice-btn .ci { font-size: 1.8rem; margin-bottom: 6px; display: block; }
-    .choice-btn .ct { font-size: 0.82rem; font-weight: 700; }
-    .choice-btn .cs { font-size: 0.72rem; color: #888; margin-top: 2px; }
-
-    .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-    .type-btn {
-      padding: 16px 8px; border: 2px solid #e0e0e0; border-radius: 8px;
-      background: #fff; cursor: pointer; text-align: center;
-      font-family: 'Inter', sans-serif; transition: border-color 0.2s, background 0.2s;
-    }
-    .type-btn:hover { border-color: #999; }
-    .type-btn.selected { border-color: #c0392b; background: #fdf2f0; }
-    .type-btn .ti { font-size: 1.6rem; display: block; margin-bottom: 5px; }
-    .type-btn .tl { font-size: 0.72rem; font-weight: 600; color: #444; }
-    .type-btn.selected .tl { color: #c0392b; }
-
-    .sev-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .sev-btn {
-      padding: 8px 4px; border: 1px solid #e0e0e0; border-radius: 6px;
-      background: #fff; cursor: pointer; font-family: 'Inter', sans-serif;
-      font-size: 0.75rem; font-weight: 600; color: #666; text-align: center; transition: all 0.15s;
-    }
-    .sev-btn:hover { background: #f5f5f5; }
-    .sev-btn.sel-low    { background: #edf7f2; border-color: #27ae60; color: #1e8449; }
-    .sev-btn.sel-medium { background: #fffbe6; border-color: #f0a500; color: #7d5a00; }
-    .sev-btn.sel-high   { background: #fdf0ef; border-color: #c0392b; color: #922b21; }
-
-    .topbar {
-      background: #1a3a2a; color: #fff; padding: 12px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .topbar-title { font-weight: 700; font-size: 0.95rem; }
-    .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .topbar-user { font-size: 0.78rem; color: rgba(255,255,255,0.7); }
-    .topbar-back {
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; padding: 5px 12px; border-radius: 5px;
-      font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
-    }
-    .topbar-back:hover { background: rgba(255,255,255,0.2); }
-
-    .info-box { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
-    .ib-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.83rem; border-bottom: 1px solid #eee; }
-    .ib-row:last-child { border-bottom: none; }
-    .ib-key { color: #888; font-weight: 500; }
-    .ib-val { color: #1a1a1a; font-weight: 600; }
-
-    .badge {
-      padding: 3px 9px; border-radius: 12px;
-      font-size: 0.68rem; font-weight: 700; text-transform: uppercase; display: inline-block;
-    }
-    .badge-fire       { background: #fde8e4; color: #c0392b; }
-    .badge-flood      { background: #e3f0fb; color: #1a6fa3; }
-    .badge-emergency  { background: #fff8e1; color: #b07c00; }
-    .badge-hurricane  { background: #f3e8ff; color: #7c3aed; }
-    .badge-earthquake { background: #fff0e0; color: #c05800; }
-    .badge-high       { background: #fde8e4; color: #c0392b; }
-    .badge-medium     { background: #fff8e1; color: #b07c00; }
-    .badge-low        { background: #edf7f2; color: #1e8449; }
-    .badge-pending    { background: #fff8e1; color: #b07c00; }
-    .badge-reviewing  { background: #e3f0fb; color: #1a6fa3; }
-    .badge-handled    { background: #edf7f2; color: #1e8449; }
-    .badge-complaint  { background: #fde8e4; color: #c0392b; }
-
-    .report-item {
-      background: #fff; border: 1px solid #e0e0e0;
-      border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; font-size: 0.83rem;
-    }
-    .report-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .report-item-title { font-weight: 700; font-size: 0.9rem; }
-    .report-meta { color: #999; font-size: 0.75rem; margin-top: 6px; }
-
-    .official-response {
-      margin-top: 10px; padding: 10px 12px;
-      background: #f0f7f4; border-left: 3px solid #2a6049;
-      border-radius: 0 6px 6px 0; font-size: 0.8rem; color: #1a3a2a; line-height: 1.5;
-    }
-    .official-response strong { display: block; font-size: 0.72rem; color: #2a6049; margin-bottom: 3px; }
-
-    .no-reports {
-      text-align: center; color: #bbb; padding: 32px;
-      font-size: 0.85rem; border: 1px dashed #ddd; border-radius: 8px;
-    }
-
-    .hotline-strip {
-      background: #c0392b; color: #fff; text-align: center;
-      padding: 8px 16px; font-size: 0.82rem; font-weight: 600;
-    }
-
-    /* Gov dashboard styles */
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-    .stat-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px 12px; text-align: center; }
-    .stat-box .s-num { font-size: 1.6rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-    .stat-box .s-lbl { font-size: 0.7rem; color: #888; font-weight: 500; }
-    .stat-total   .s-num { color: #1a3a2a; }
-    .stat-pending .s-num { color: #b07c00; }
-    .stat-handling .s-num { color: #1a6fa3; }
-    .stat-done    .s-num { color: #1e8449; }
-
-    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-btn {
-      padding: 6px 14px; border: 1px solid #e0e0e0; border-radius: 20px; background: #fff;
-      font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600;
-      color: #666; cursor: pointer; transition: all 0.15s;
-    }
-    .filter-btn:hover { background: #f5f5f5; }
-    .filter-btn.active { background: #1a3a2a; color: #fff; border-color: #1a3a2a; }
-
-    .review-card {
-      background: #fff; border: 1px solid #e0e0e0;
-      border-radius: 10px; margin-bottom: 14px; overflow: hidden; transition: box-shadow 0.2s;
-    }
-    .review-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-    .review-card.type-fire       { border-left: 4px solid #c0392b; }
-    .review-card.type-flood      { border-left: 4px solid #1a6fa3; }
-    .review-card.type-emergency  { border-left: 4px solid #b07c00; }
-    .review-card.type-hurricane  { border-left: 4px solid #7c3aed; }
-    .review-card.type-earthquake { border-left: 4px solid #c05800; }
-
-    .review-card-header {
-      padding: 14px 18px; display: flex; justify-content: space-between;
-      align-items: flex-start; gap: 10px;
-    }
-    .review-card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; color: #1a1a1a; }
-    .review-card-meta { font-size: 0.75rem; color: #888; display: flex; flex-wrap: wrap; gap: 10px; }
-    .review-card-badges { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-
-    .review-card-body { display: none; padding: 0 18px 18px; border-top: 1px solid #f0f0f0; }
-    .review-card-body.open { display: block; }
-
-    .review-desc {
-      font-size: 0.85rem; color: #444; line-height: 1.6;
-      margin: 14px 0; padding: 12px 14px; background: #fafafa; border-radius: 6px;
-    }
-
-    .reporter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-    .reporter-cell { background: #f5f5f5; border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; }
-    .reporter-cell .rc-key { color: #888; font-size: 0.7rem; margin-bottom: 2px; }
-    .reporter-cell .rc-val { font-weight: 600; color: #1a1a1a; }
-
-    .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .status-btn {
-      padding: 7px 14px; border-radius: 6px; border: 1px solid #e0e0e0; background: #fff;
-      font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
-    }
-    .status-btn.s-reviewing        { border-color: #1a6fa3; color: #1a6fa3; }
-    .status-btn.s-reviewing.active { background: #1a6fa3; color: #fff; }
-    .status-btn.s-handled          { border-color: #1e8449; color: #1e8449; }
-    .status-btn.s-handled.active   { background: #1e8449; color: #fff; }
-    .status-btn.s-complaint        { border-color: #c0392b; color: #c0392b; }
-    .status-btn.s-complaint.active { background: #c0392b; color: #fff; }
-    .status-btn.s-pending          { border-color: #b07c00; color: #b07c00; }
-    .status-btn.s-pending.active   { background: #b07c00; color: #fff; }
-
-    .response-section textarea { min-height: 80px; font-size: 0.85rem; margin-bottom: 10px; }
-
-    .saved-response {
-      padding: 12px 14px; background: #f0f7f4; border-left: 3px solid #2a6049;
-      border-radius: 0 6px 6px 0; font-size: 0.82rem; color: #1a3a2a;
-      line-height: 1.5; margin-bottom: 12px;
-    }
-    .saved-response .sr-label {
-      font-size: 0.7rem; font-weight: 700; color: #2a6049;
-      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;
-    }
-    .saved-response .sr-meta { font-size: 0.7rem; color: #888; margin-top: 6px; }
-
-    .expand-btn {
-      background: none; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 0.78rem; color: #2a6049;
-      font-weight: 600; padding: 8px 0; display: block; width: 100%; text-align: left;
-    }
-    .expand-btn:hover { text-decoration: underline; }
-
-    /* Loading spinner */
-    .spinner {
-      display: inline-block; width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 520px) {
-      .card { padding: 24px 18px; }
-      .type-grid { grid-template-columns: repeat(2, 1fr); }
-      .portal-choice { grid-template-columns: 1fr; }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .reporter-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- =====================================================
-       SUPABASE IS LOADED FIRST — before any other scripts
-       This is critical. If this tag is at the bottom, nothing works.
-  ====================================================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <div class="hotline-strip">
-    🚨 Life-threatening emergency? Call 110 (Fire) or 119 (Police) immediately
-  </div>
-
-  <!-- PAGE 1: ENTRY -->
-  <div class="page active" id="page-entry">
-    <div class="container">
-      <div class="card">
-        <div class="logo">
-          <h1>Safe Reach JA</h1>
-          <p>Select how you want to sign in</p>
-        </div>
-        <div class="portal-choice">
-          <div class="choice-btn" onclick="showPage('page-gov')" role="button" tabindex="0">
-            <span class="ci">⚖️</span>
-            <div class="ct">Government</div>
-            <div class="cs">Officials only</div>
-          </div>
-          <div class="choice-btn" onclick="showPage('page-user')" role="button" tabindex="0">
-            <span class="ci">👤</span>
-            <div class="ct">Public User</div>
-            <div class="cs">Residents</div>
-          </div>
-        </div>
-        <p style="font-size:0.78rem;color:#999;text-align:center;line-height:1.6;">
-          Report flooding, fires, and other emergencies across Jamaica.
-          Government officials use their Badge ID to review and respond to reports.
-        </p>
-      </div>
+  <body>
+    <div class="session-controls">
+      <span id="session-username" class="session-username">Signed in</span>
+      <button id="logout-btn" class="logout-btn" type="button">Log out</button>
     </div>
-  </div>
 
-  <!-- PAGE 2: GOVERNMENT LOGIN -->
-  <div class="page" id="page-gov">
-    <div class="topbar">
-      <span class="topbar-title">⚖️ Government Portal</span>
-      <button class="topbar-back" onclick="showPage('page-entry')">← Back</button>
-    </div>
-    <div class="container">
-      <div class="card" id="gov-auth">
-        <div class="tabs">
-          <button class="tab active" id="gtab-login" onclick="govTab('login')">Login</button>
-          <button class="tab"        id="gtab-reg"   onclick="govTab('register')">Register</button>
-        </div>
+    <div id="search-panel">
+      <form id="search-form">
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Enter address or place"
+          aria-label="Address"
+          required
+        />
+        <select id="incident-type" aria-label="Incident type">
+          <option value="">None</option>
+          <option value="flood">Flood</option>
+          <option value="fire">Fire</option>
+          <option value="accident">Accident</option>
+          <option value="missing_person">Missing Person</option>
+          <option value="fallen_building">Fallen Building</option>
+          <option value="natural_disaster">Natural Disaster</option>
+          <option value="crime">Crime</option>
+          <option value="medical_emergency">Medical Emergency</option>
+          <option value="custom">Custom</option>
+        </select>
+        <input
+          id="incident-custom"
+          type="text"
+          placeholder="Custom incident text"
+          aria-label="Custom incident"
+        />
+        <button type="submit">Pin</button>
+        <button id="toggle-graphs" type="button">Show Stats</button>
+      </form>
 
-        <div class="panel active" id="gp-login">
-          <div class="alert" id="g-login-alert"></div>
-          <div class="field"><label>Badge ID</label>
-            <input type="text" id="g-badge" placeholder="e.g. GOV-001"/></div>
-          <div class="field"><label>Password</label>
-            <input type="password" id="g-pass" placeholder="Your password"/></div>
-          <div class="field"><label>Department</label>
-            <select id="g-dept">
-              <option value="">— Select department —</option>
-              <option value="justice">Ministry of Justice</option>
-              <option value="defence">Department of Defence</option>
-              <option value="health">Ministry of Health</option>
-              <option value="finance">Treasury & Finance</option>
-              <option value="interior">Ministry of the Interior</option>
-            </select></div>
-          <button class="btn btn-primary" id="gov-login-btn" onclick="govLogin()">Sign In</button>
-          <div class="link-text">No account? <a onclick="govTab('register')">Register here</a></div>
+      <details id="directions-details" class="directions-details">
+        <summary>Directions (From / To)</summary>
+        <div class="route-inputs">
+          <input
+            id="from-coords"
+            type="text"
+            placeholder="From (lat,lon) or address"
+          />
+          <input
+            id="to-coords"
+            type="text"
+            placeholder="To (lat,lon) or address"
+          />
         </div>
+        <button id="route-btn" type="button">Route</button>
+      </details>
+    </div>
 
-        <div class="panel" id="gp-reg">
-          <div class="alert" id="g-reg-alert"></div>
-          <div class="field"><label>Full Name</label>
-            <input type="text" id="gr-name" placeholder="Your full name"/></div>
-          <div class="field"><label>Government Email</label>
-            <input type="email" id="gr-email" placeholder="name@department.gov"/></div>
-          <div class="field"><label>Badge ID</label>
-            <input type="text" id="gr-badge" placeholder="e.g. GOV-002"/></div>
-          <div class="field"><label>Department</label>
-            <select id="gr-dept">
-              <option value="">— Select department —</option>
-              <option value="justice">Ministry of Justice</option>
-              <option value="defence">Department of Defence</option>
-              <option value="health">Ministry of Health</option>
-              <option value="finance">Treasury & Finance</option>
-              <option value="interior">Ministry of the Interior</option>
-            </select></div>
-          <div class="field"><label>Clearance Level</label>
-            <select id="gr-clearance">
-              <option value="">— Select clearance —</option>
-              <option value="1">Level 1 — Public Servant</option>
-              <option value="2">Level 2 — Official</option>
-              <option value="3">Level 3 — Confidential</option>
-              <option value="4">Level 4 — Secret</option>
-            </select></div>
-          <div class="field"><label>Password</label>
-            <input type="password" id="gr-pass" placeholder="Min. 8 characters"/></div>
-          <div class="field"><label>Confirm Password</label>
-            <input type="password" id="gr-pass2" placeholder="Repeat password"/></div>
-          <button class="btn btn-primary" id="gov-reg-btn" onclick="govRegister()">Create Account</button>
-          <div class="link-text">Already registered? <a onclick="govTab('login')">Sign in</a></div>
-        </div>
-      </div>
-    </div>
-  </div>
+    <button
+      id="show-emergency-btn"
+      type="button"
+      aria-label="Emergency services"
+    >
+      👮 🚒 🚑 Emergency Services
+    </button>
+    <button id="panic-btn" type="button" aria-label="Panic button">
+      🆘 PANIC
+    </button>
 
-  <!-- PAGE 3: GOVERNMENT REVIEW DASHBOARD -->
-  <div class="page" id="page-gov-review">
-    <div class="topbar">
-      <span class="topbar-title">📋 Incident Review Dashboard</span>
-      <div class="topbar-right">
-        <span class="topbar-user" id="gov-topbar-name"></span>
-        <button class="topbar-back" onclick="govLogout()">Sign Out</button>
-      </div>
-    </div>
-    <div class="container-wide">
-      <div class="stats-row">
-        <div class="stat-box stat-total">
-          <div class="s-num" id="st-total">0</div><div class="s-lbl">Total</div>
-        </div>
-        <div class="stat-box stat-pending">
-          <div class="s-num" id="st-pending">0</div><div class="s-lbl">Pending</div>
-        </div>
-        <div class="stat-box stat-handling">
-          <div class="s-num" id="st-reviewing">0</div><div class="s-lbl">Reviewing</div>
-        </div>
-        <div class="stat-box stat-done">
-          <div class="s-num" id="st-handled">0</div><div class="s-lbl">Handled</div>
-        </div>
-      </div>
-      <div class="filter-row">
-        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-        <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
-        <button class="filter-btn" onclick="setFilter('reviewing',this)">Reviewing</button>
-        <button class="filter-btn" onclick="setFilter('handled',this)">Handled</button>
-        <button class="filter-btn" onclick="setFilter('complaint',this)">Complaint</button>
-      </div>
-      <div id="gov-reports-list">
-        <div class="no-reports">Loading reports…</div>
-      </div>
-    </div>
-  </div>
+    <div id="emergency-backdrop"></div>
 
-  <!-- PAGE 4: PUBLIC USER LOGIN -->
-  <div class="page" id="page-user">
-    <div class="topbar">
-      <span class="topbar-title">👤 Public Login</span>
-      <button class="topbar-back" onclick="showPage('page-entry')">← Back</button>
+    <div id="person-panel">
+      <label for="person-name">Helping who?</label>
+      <input
+        id="person-name"
+        type="text"
+        placeholder="Enter name"
+        aria-label="Person name"
+      />
+      <button id="save-person">Save</button>
+      <div id="person-status"></div>
     </div>
-    <div class="container">
-      <div id="user-dash" style="display:none;">
-        <div class="card">
-          <div class="logo">
-            <span class="logo-icon">✅</span>
-            <h1>Welcome, <span id="ud-name"></span></h1>
-            <p style="color:#666;font-size:0.82rem;">Signed in as Public User</p>
-          </div>
-          <div class="info-box">
-            <div class="ib-row"><span class="ib-key">Email</span><span class="ib-val" id="ud-email"></span></div>
-            <div class="ib-row"><span class="ib-key">Signed in</span><span class="ib-val" id="ud-time"></span></div>
-          </div>
-          <button class="btn btn-primary" onclick="showPage('page-select')">Report an Incident →</button>
-          <button class="btn btn-danger" onclick="userLogout()">Sign Out</button>
-        </div>
-      </div>
-      <div class="card" id="user-auth">
-        <div class="tabs">
-          <button class="tab active" id="utab-login" onclick="userTab('login')">Sign In</button>
-          <button class="tab"        id="utab-reg"   onclick="userTab('register')">Register</button>
-        </div>
-        <div class="panel active" id="up-login">
-          <div class="alert" id="u-login-alert"></div>
-          <div class="field"><label>Email Address</label>
-            <input type="email" id="u-email" placeholder="your@email.com"/></div>
-          <div class="field"><label>Password</label>
-            <input type="password" id="u-pass" placeholder="Your password"/></div>
-          <button class="btn btn-primary" id="user-login-btn" onclick="userLogin()">Sign In</button>
-          <div class="link-text">No account? <a onclick="userTab('register')">Register free</a></div>
-        </div>
-        <div class="panel" id="up-reg">
-          <div class="alert" id="u-reg-alert"></div>
-          <div class="field"><label>Full Name</label>
-            <input type="text" id="ur-name" placeholder="Your name"/></div>
-          <div class="field"><label>Email Address</label>
-            <input type="email" id="ur-email" placeholder="your@email.com"/></div>
-          <div class="field"><label>Password</label>
-            <input type="password" id="ur-pass" placeholder="Min. 8 characters"/></div>
-          <div class="field"><label>Confirm Password</label>
-            <input type="password" id="ur-pass2" placeholder="Repeat password"/></div>
-          <button class="btn btn-primary" id="user-reg-btn" onclick="userRegister()">Create Account</button>
-          <div class="link-text">Already registered? <a onclick="userTab('login')">Sign in</a></div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- PAGE 5: EMERGENCY TYPE SELECTION -->
-  <div class="page" id="page-select">
-    <div class="topbar">
-      <span class="topbar-title">🚨 Select Emergency Type</span>
-      <button class="topbar-back" onclick="showPage('page-user')">← Back</button>
-    </div>
-    <div class="container">
-      <div class="card">
-        <p class="section-title">What type of emergency?</p>
-        <div class="type-grid">
-          <div class="type-btn" data-type="fire"       onclick="selectType(this)"><span class="ti">🔥</span><span class="tl">Fire</span></div>
-          <div class="type-btn" data-type="flood"      onclick="selectType(this)"><span class="ti">🌊</span><span class="tl">Flooding</span></div>
-          <div class="type-btn" data-type="emergency"  onclick="selectType(this)"><span class="ti">🚨</span><span class="tl">Emergency</span></div>
-          <div class="type-btn" data-type="hurricane"  onclick="selectType(this)"><span class="ti">🌀</span><span class="tl">Hurricane</span></div>
-          <div class="type-btn" data-type="earthquake" onclick="selectType(this)"><span class="ti">⚡</span><span class="tl">Earthquake</span></div>
-        </div>
-        <div class="alert" id="type-alert"></div>
-        <button class="btn btn-primary" onclick="continueToReport()">Continue →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE 6: REPORT FORM -->
-  <div class="page" id="page-report">
-    <div class="topbar">
-      <span class="topbar-title" id="report-topbar-title">Incident Report</span>
-      <button class="topbar-back" onclick="showPage('page-select')">← Back</button>
-    </div>
-    <div class="container-wide">
-      <div class="alert" id="report-alert" style="margin-bottom:16px;"></div>
-      <div class="card">
-        <p class="section-title">Incident Details</p>
-        <div class="field"><label>Brief Title *</label>
-          <input type="text" id="r-title" placeholder="e.g. House fire on Main Street"/></div>
-        <div class="field"><label>Date & Time *</label>
-          <input type="datetime-local" id="r-datetime"/></div>
-        <div class="field"><label>Description *</label>
-          <textarea id="r-desc" placeholder="Describe the situation…"></textarea></div>
-        <div class="field"><label>Severity *</label>
-          <div class="sev-row">
-            <button class="sev-btn" data-sev="low"    onclick="selectSev(this)">🟢 Low</button>
-            <button class="sev-btn" data-sev="medium" onclick="selectSev(this)">🟡 Medium</button>
-            <button class="sev-btn" data-sev="high"   onclick="selectSev(this)">🔴 High</button>
-          </div>
-        </div>
-      </div>
-      <div class="card" style="margin-top:14px;">
-        <p class="section-title">Location</p>
-        <div class="field"><label>Parish *</label>
-          <select id="r-parish">
-            <option value="">— Select parish —</option>
-            <option>Kingston</option><option>St. Andrew</option><option>St. Thomas</option>
-            <option>Portland</option><option>St. Mary</option><option>St. Ann</option>
-            <option>Trelawny</option><option>St. James</option><option>Hanover</option>
-            <option>Westmoreland</option><option>St. Elizabeth</option><option>Manchester</option>
-            <option>Clarendon</option><option>St. Catherine</option>
-          </select></div>
-        <div class="field"><label>Address / Nearest Landmark *</label>
-          <input type="text" id="r-address" placeholder="e.g. 14 Main Street, near the plaza"/></div>
-      </div>
-      <div class="card" style="margin-top:14px;">
-        <p class="section-title">Your Contact Details</p>
-        <div class="field"><label>Full Name *</label>
-          <input type="text" id="r-name" placeholder="Your name"/></div>
-        <div class="field"><label>Phone Number *</label>
-          <input type="tel" id="r-phone" placeholder="(876) 555-0000"/></div>
-        <div class="field"><label>Email (optional)</label>
-          <input type="email" id="r-email" placeholder="your@email.com"/></div>
-        <button class="btn btn-primary" id="submit-btn" style="margin-top:8px;" onclick="submitReport()">
-          Submit Report
+    <div id="emergency-panel">
+      <div
+        class="emergency-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <span style="font-weight: 700">Emergency Panel</span>
+        <button
+          id="close-emergency-btn"
+          type="button"
+          style="
+            background: #888;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+          "
+        >
+          ✕
         </button>
       </div>
-      <div style="margin-top:24px;">
-        <h2 style="font-size:1rem;font-weight:700;margin-bottom:12px;">
-          Your Submitted Reports
-          <span id="report-count" style="font-weight:400;color:#999;font-size:0.82rem;margin-left:6px;"></span>
-        </h2>
-        <div id="reports-list"><div class="no-reports">No reports yet</div></div>
+      <button id="call-emergency">Contact Emergency Services</button>
+      <button id="dispatch-911-btn" type="button">
+        Dispatch Selected Data to 911
+      </button>
+      <div class="emergency-custom-number">
+        <input
+          id="custom-emergency-number"
+          type="tel"
+          placeholder="Custom emergency number (optional)"
+          aria-label="Custom emergency number"
+        />
+      </div>
+      <div class="sms-request-inputs" style="margin-top: 10px">
+        <input
+          id="sms-phone"
+          type="tel"
+          placeholder="Phone number for location request"
+          aria-label="Phone number"
+          style="width: calc(100% - 120px); margin-right: 5px"
+        />
+        <button id="sms-request-btn" type="button">
+          Request Location via SMS
+        </button>
+      </div>
+      <div id="emergency-status">No emergency contact made yet.</div>
+      <div id="route-info">Route info will appear here</div>
+    </div>
+
+    <div id="message-panel">
+      <div class="message-header">
+        <h3>Message nearest provider</h3>
+        <button id="toggle-message" type="button">Hide Message</button>
+      </div>
+      <div id="message-body">
+        <textarea
+          id="direction-message"
+          placeholder="Describe where you are and how to reach you"
+          rows="3"
+        ></textarea>
+        <button id="send-message">Send message</button>
+        <div id="message-status">No message sent yet.</div>
       </div>
     </div>
-  </div>
 
-
-  <!-- ============================================================
-       MAIN SCRIPT — Supabase is already loaded above, so this
-       script can safely use the `supabase` global object.
-  ============================================================= -->
-  <script>
-
-    /* ============================================================
-       STEP 1: PASTE YOUR SUPABASE CREDENTIALS HERE
-       Get these from: Supabase Dashboard → Project Settings → API
-    ============================================================= */
-    const SUPABASE_URL = 'https://qevxunaoeqquhbojofpi.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFldnh1bmFvZXFxdWhib2pvZnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjAxNTgsImV4cCI6MjA4OTA5NjE1OH0.uXK7CsPb2XqynZX6XQ5jfN3nl5GSLXMPZrrOeP9gYCk'
-    /* Initialise the Supabase client */
-    const { createClient } = supabase
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-    /* ============================================================
-       GLOBAL STATE
-    ============================================================= */
-    let selectedType    = ''   // which emergency type the user picked
-    let selectedSev     = ''   // which severity the user picked
-    let govFilter       = 'all' // active filter on the gov dashboard
-    let loggedInGovUser = null  // the currently signed-in official
-    let currentUserId   = null  // the Supabase auth user ID (public users)
-
-
-    /* ============================================================
-       PAGE NAVIGATION
-    ============================================================= */
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
-      document.getElementById(id).classList.add('active')
-      window.scrollTo({ top: 0, behavior: 'instant' })
-    }
-
-
-    /* ============================================================
-       ALERT HELPERS
-    ============================================================= */
-    function showAlert(id, type, msg) {
-      const el = document.getElementById(id)
-      el.textContent = msg
-      el.className = `alert alert-${type} show`
-    }
-    function clearAlert(id) {
-      const el = document.getElementById(id)
-      el.textContent = ''
-      el.className = 'alert'
-    }
-
-
-    /* ============================================================
-       BUTTON LOADING STATE
-       Shows a spinner on a button while an async call is running
-    ============================================================= */
-    function setLoading(btnId, loading, label) {
-      const btn = document.getElementById(btnId)
-      if (!btn) return
-      btn.disabled = loading
-      btn.innerHTML = loading
-        ? `<span class="spinner"></span> Please wait…`
-        : label
-    }
-
-
-    /* ============================================================
-       UTILITY FUNCTIONS
-    ============================================================= */
-    function strongPw(pw)   { return pw.length >= 8 && /[0-9]/.test(pw) }
-    function validEmail(e)  { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()) }
-    function govEmail(e)    { return /\.gov(\.[a-z]{2})?$/i.test(e.trim()) }
-    function validBadge(id) { return /^[A-Z]{2,6}-\d{2,6}$/i.test(id.trim()) }
-
-    // Escapes HTML to safely insert user-provided text into innerHTML
-    function esc(s) {
-      if (!s) return ''
-      return String(s)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
-
-    // Human-readable status labels
-    function statusLabel(s) {
-      return { pending:'Pending', reviewing:'Reviewing', handled:'Handled', complaint:'Complaint' }[s] || s
-    }
-
-
-    /* ============================================================
-       GOVERNMENT TAB SWITCHER
-    ============================================================= */
-    function govTab(t) {
-      document.getElementById('gtab-login').classList.toggle('active', t === 'login')
-      document.getElementById('gtab-reg').classList.toggle('active',   t === 'register')
-      document.getElementById('gp-login').classList.toggle('active', t === 'login')
-      document.getElementById('gp-reg').classList.toggle('active',   t === 'register')
-      clearAlert('g-login-alert')
-      clearAlert('g-reg-alert')
-    }
-
-
-    /* ============================================================
-       GOVERNMENT LOGIN
-       Queries the government_officials table in Supabase.
-       On success, navigates to the review dashboard.
-    ============================================================= */
-  async function govLogin() {
-  clearAlert('g-login-alert')
-
-  const badge = document.getElementById('g-badge').value.trim().toUpperCase()
-  const pass  = document.getElementById('g-pass').value
-  const dept  = document.getElementById('g-dept').value
-
-  if (!badge || !pass || !dept) {
-    showAlert('g-login-alert', 'error', 'Please fill in all fields.')
-    return
-  }
-
-  // Show a loading message while we wait for Supabase
-  showAlert('g-login-alert', 'info', 'Checking credentials…')
-
-  // Query Supabase for this badge ID
-  const { data, error } = await db
-    .from('government_officials')
-    .select('*')
-    .eq('badge_id', badge)
-    .single()
-
-  // If Supabase returned an error or no row was found
-  if (error || !data) {
-    showAlert('g-login-alert', 'error', 'Badge ID not found in the system. Contact your administrator.')
-    console.log('Supabase error:', error)   // shows the real error in F12 console
-    return
-  }
-
-  // Check password
-  if (data.password !== pass) {
-    showAlert('g-login-alert', 'error', 'Incorrect password.')
-    return
-  }
-
-  // Check department
-  if (data.department !== dept) {
-    showAlert('g-login-alert', 'error', 'Department does not match your record.')
-    return
-  }
-
-  // Success
-  loggedInGovUser = {
-    badge,
-    name:  data.name,
-    dept:  data.department,
-    role:  data.role
-  }
-
-  document.getElementById('gov-topbar-name').textContent = data.name
-  await loadGovReports()
-  showPage('page-gov-review')
-}
-    /* ============================================================
-       GOVERNMENT REGISTER
-       Verifies the badge ID against the approved officials table,
-       then sets the official's password so they can log in.
-    ============================================================= */
-    async function govRegister() {
-      clearAlert('g-reg-alert')
-      setLoading('gov-reg-btn', true, 'Create Account')
-
-      const name      = document.getElementById('gr-name').value.trim()
-      const email     = document.getElementById('gr-email').value.trim().toLowerCase()
-      const badge     = document.getElementById('gr-badge').value.trim().toUpperCase()
-      const dept      = document.getElementById('gr-dept').value
-      const clearance = document.getElementById('gr-clearance').value
-      const pass      = document.getElementById('gr-pass').value
-      const pass2     = document.getElementById('gr-pass2').value
-
-      if (!name || !email || !badge || !dept || !clearance || !pass || !pass2) {
-        showAlert('g-reg-alert', 'error', 'Please fill in all fields.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-      if (!govEmail(email)) {
-        showAlert('g-reg-alert', 'error', 'A government .gov email address is required.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-      if (!strongPw(pass)) {
-        showAlert('g-reg-alert', 'error', 'Password must be 8+ characters and include a number.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-      if (pass !== pass2) {
-        showAlert('g-reg-alert', 'error', 'Passwords do not match.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-
-      // Check the badge ID exists in the approved officials table
-      const { data: official, error: fetchErr } = await db
-        .from('government_officials')
-        .select('*')
-        .eq('badge_id', badge)
-        .single()
-
-      if (fetchErr || !official) {
-        showAlert('g-reg-alert', 'error', 'Badge ID not found in the approved officials list.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-      if (official.email !== email) {
-        showAlert('g-reg-alert', 'error', 'Email does not match the record for this badge ID.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-      if (official.department !== dept) {
-        showAlert('g-reg-alert', 'error', 'Department does not match the record.')
-        setLoading('gov-reg-btn', false, 'Create Account'); return
-      }
-
-      // Save the password so the official can now log in
-      const { error: updateErr } = await db
-        .from('government_officials')
-        .update({ password: pass })
-        .eq('badge_id', badge)
-
-      setLoading('gov-reg-btn', false, 'Create Account')
-
-      if (updateErr) {
-        showAlert('g-reg-alert', 'error', 'Registration failed. Please try again.'); return
-      }
-
-      showAlert('g-reg-alert', 'success', '✔ Account activated! You can now sign in.')
-      setTimeout(() => {
-        govTab('login')
-        document.getElementById('g-badge').value = badge
-      }, 1800)
-    }
-
-
-    /* ============================================================
-       GOVERNMENT LOGOUT
-    ============================================================= */
-    function govLogout() {
-      loggedInGovUser = null
-      document.getElementById('g-badge').value = ''
-      document.getElementById('g-pass').value  = ''
-      document.getElementById('g-dept').value  = ''
-      govTab('login')
-      showPage('page-entry')
-    }
-
-
-    /* ============================================================
-       LOAD REPORTS FROM SUPABASE (Government Dashboard)
-       Fetches all incident_reports rows ordered newest first.
-    ============================================================= */
-    async function loadGovReports() {
-      document.getElementById('gov-reports-list').innerHTML =
-        '<div class="no-reports">Loading reports…</div>'
-
-      const { data, error } = await db
-        .from('incident_reports')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        document.getElementById('gov-reports-list').innerHTML =
-          `<div class="no-reports">Error loading reports: ${esc(error.message)}</div>`
-        return
-      }
-
-      renderGovDashboard(data)
-    }
-
-
-    /* ============================================================
-       RENDER GOV DASHBOARD
-       Builds report cards from the data array.
-       NOTE: Column names match the Supabase table exactly:
-         description, severity, reporter_name, reporter_phone,
-         reporter_email, responded_by, responded_at
-    ============================================================= */
-    function renderGovDashboard(data) {
-      // Update stats
-      document.getElementById('st-total').textContent    = data.length
-      document.getElementById('st-pending').textContent  = data.filter(r => r.status === 'pending').length
-      document.getElementById('st-reviewing').textContent= data.filter(r => r.status === 'reviewing').length
-      document.getElementById('st-handled').textContent  = data.filter(r => r.status === 'handled').length
-
-      // Apply current filter
-      const filtered = govFilter === 'all'
-        ? data
-        : data.filter(r => r.status === govFilter)
-
-      const container = document.getElementById('gov-reports-list')
-
-      if (filtered.length === 0) {
-        container.innerHTML = '<div class="no-reports">No reports match this filter.</div>'
-        return
-      }
-
-      const icons = { fire:'🔥', flood:'🌊', emergency:'🚨', hurricane:'🌀', earthquake:'⚡' }
-
-      container.innerHTML = filtered.map(r => `
-        <div class="review-card type-${esc(r.type)}" id="rcard-${r.id}">
-
-          <div class="review-card-header">
-            <div>
-              <div class="review-card-title">${icons[r.type] || '📋'} ${esc(r.title)}</div>
-              <div class="review-card-meta">
-                <span>📍 ${esc(r.parish)}</span>
-                <span>📅 ${esc(r.created_at ? r.created_at.slice(0,16).replace('T',' ') : '')}</span>
-                <span>👤 ${esc(r.reporter_name)}</span>
-              </div>
-            </div>
-            <div class="review-card-badges">
-              <span class="badge badge-${esc(r.type)}">${esc(r.type)}</span>
-              <span class="badge badge-${esc(r.severity)}">${esc(r.severity)}</span>
-              <span class="badge badge-${esc(r.status)}">${statusLabel(r.status)}</span>
-            </div>
-          </div>
-
-          <div style="padding:0 18px;">
-            <button class="expand-btn" onclick="toggleCard(${r.id})" id="expand-btn-${r.id}">
-              ▼ View details & respond
-            </button>
-          </div>
-
-          <div class="review-card-body" id="rbody-${r.id}">
-
-            <div class="review-desc">${esc(r.description)}</div>
-
-            <div class="reporter-grid">
-              <div class="reporter-cell">
-                <div class="rc-key">Reporter</div>
-                <div class="rc-val">${esc(r.reporter_name)}</div>
-              </div>
-              <div class="reporter-cell">
-                <div class="rc-key">Phone</div>
-                <div class="rc-val">${esc(r.reporter_phone)}</div>
-              </div>
-              <div class="reporter-cell">
-                <div class="rc-key">Address</div>
-                <div class="rc-val">${esc(r.address)}</div>
-              </div>
-              <div class="reporter-cell">
-                <div class="rc-key">Submitted</div>
-                <div class="rc-val">${esc(r.created_at ? r.created_at.slice(0,16).replace('T',' ') : '')}</div>
-              </div>
-              ${r.reporter_email ? `<div class="reporter-cell" style="grid-column:1/-1;">
-                <div class="rc-key">Email</div>
-                <div class="rc-val">${esc(r.reporter_email)}</div>
-              </div>` : ''}
-            </div>
-
-            <div style="margin-bottom:12px;">
-              <label style="margin-bottom:8px;display:block;">Update Status</label>
-              <div class="status-row">
-                <button class="status-btn s-pending   ${r.status==='pending'   ?'active':''}" onclick="updateStatus(${r.id},'pending')">⏳ Pending</button>
-                <button class="status-btn s-reviewing ${r.status==='reviewing' ?'active':''}" onclick="updateStatus(${r.id},'reviewing')">🔍 Reviewing</button>
-                <button class="status-btn s-handled   ${r.status==='handled'   ?'active':''}" onclick="updateStatus(${r.id},'handled')">✅ Handled</button>
-                <button class="status-btn s-complaint ${r.status==='complaint' ?'active':''}" onclick="updateStatus(${r.id},'complaint')">⚠️ Complaint</button>
-              </div>
-            </div>
-
-            ${r.response ? `
-              <div class="saved-response">
-                <div class="sr-label">Official Response</div>
-                ${esc(r.response)}
-                <div class="sr-meta">— ${esc(r.responded_by)} · ${esc(r.responded_at)}</div>
-              </div>` : ''}
-
-            <div class="response-section">
-              <label>${r.response ? 'Update Response' : 'Write Official Response'}</label>
-              <textarea id="resp-input-${r.id}"
-                placeholder="Write your official response — actions taken, agencies dispatched, advice for the public…"
-              >${esc(r.response || '')}</textarea>
-              <button class="btn btn-primary"
-                style="width:auto;padding:9px 22px;font-size:0.85rem;"
-                id="resp-btn-${r.id}"
-                onclick="saveResponse(${r.id})">
-                ${r.response ? 'Update Response' : 'Save Response'}
-              </button>
-            </div>
-
-          </div>
+    <div id="ai-chatbot-panel" aria-label="AI chatbot panel">
+      <div class="ai-chatbot-header">
+        <h3>AI Volatile Area Assistant</h3>
+      </div>
+      <div id="ai-chatbot-log" class="ai-chatbot-log">
+        <div class="ai-bot-msg">
+          Ask me about volatile areas, or press autofill for the highest-risk
+          zone.
         </div>
-      `).join('')
-    }
+      </div>
+      <div class="ai-chatbot-actions">
+        <button id="ai-autofill-btn" type="button">Autofill Risk Area</button>
+      </div>
+      <div class="ai-chatbot-input-row">
+        <input
+          id="ai-chatbot-input"
+          type="text"
+          placeholder="Type: volatile areas, hotspot, or autofill"
+          aria-label="AI chatbot input"
+        />
+        <button id="ai-chatbot-send" type="button">Send</button>
+      </div>
+    </div>
 
+    <div id="stats-panel">Top pinned: none</div>
 
-    /* ============================================================
-       TOGGLE CARD EXPAND / COLLAPSE
-    ============================================================= */
-    function toggleCard(id) {
-      const body = document.getElementById(`rbody-${id}`)
-      const btn  = document.getElementById(`expand-btn-${id}`)
-      const open = body.classList.toggle('open')
-      btn.textContent = open ? '▲ Collapse' : '▼ View details & respond'
-    }
+    <div id="graphs-panel">
+      <h3>Analytics</h3>
+      <div id="incident-by-type" class="graph-block"></div>
+      <div id="top-locations" class="graph-block"></div>
+      <div id="area-cumulative" class="graph-block"></div>
+      <div id="location-addresses" class="graph-block"></div>
+    </div>
 
+    <button
+      id="show-message-btn"
+      class="show-message-btn"
+      title="Show message panel"
+    >
+      ✉️
+    </button>
 
-    /* ============================================================
-       UPDATE STATUS — writes to Supabase then reloads
-    ============================================================= */
-    async function updateStatus(id, newStatus) {
-      const { error } = await db
-        .from('incident_reports')
-        .update({ status: newStatus })
-        .eq('id', id)
+    <div id="map"></div>
 
-      if (error) {
-        alert('Failed to update status: ' + error.message); return
-      }
-
-      await loadGovReports()
-    }
-
-
-    /* ============================================================
-       SAVE OFFICIAL RESPONSE — writes to Supabase then reloads
-    ============================================================= */
-    async function saveResponse(id) {
-      const textarea = document.getElementById(`resp-input-${id}`)
-      const text = textarea ? textarea.value.trim() : ''
-
-      if (!text) { alert('Please write a response before saving.'); return }
-
-      setLoading(`resp-btn-${id}`, true, 'Save Response')
-
-      const respondedBy = loggedInGovUser ? loggedInGovUser.name : 'Official'
-      const respondedAt = new Date().toLocaleString()
-
-      const { error } = await db
-        .from('incident_reports')
-        .update({
-          response:     text,
-          responded_by: respondedBy,
-          responded_at: respondedAt,
-          // Auto-advance from pending to reviewing when a response is first written
-          status: 'reviewing'
-        })
-        .eq('id', id)
-
-      if (error) {
-        alert('Failed to save response: ' + error.message)
-        setLoading(`resp-btn-${id}`, false, 'Save Response')
-        return
-      }
-
-      await loadGovReports()
-    }
-
-
-    /* ============================================================
-       FILTER — updates govFilter and reloads
-    ============================================================= */
-    function setFilter(filter, btn) {
-      govFilter = filter
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
-      btn.classList.add('active')
-      loadGovReports()
-    }
-
-
-    /* ============================================================
-       USER TAB SWITCHER
-    ============================================================= */
-    function userTab(t) {
-      document.getElementById('utab-login').classList.toggle('active', t === 'login')
-      document.getElementById('utab-reg').classList.toggle('active',   t === 'register')
-      document.getElementById('up-login').classList.toggle('active', t === 'login')
-      document.getElementById('up-reg').classList.toggle('active',   t === 'register')
-      clearAlert('u-login-alert')
-      clearAlert('u-reg-alert')
-    }
-
-
-    /* ============================================================
-       USER LOGIN — uses Supabase Auth
-    ============================================================= */
-    async function userLogin() {
-      clearAlert('u-login-alert')
-      setLoading('user-login-btn', true, 'Sign In')
-
-      const email = document.getElementById('u-email').value.trim().toLowerCase()
-      const pass  = document.getElementById('u-pass').value
-
-      if (!email || !pass) {
-        showAlert('u-login-alert', 'error', 'Please enter your email and password.')
-        setLoading('user-login-btn', false, 'Sign In'); return
-      }
-      if (govEmail(email)) {
-        showAlert('u-login-alert', 'error', 'Government emails must use the Government login.')
-        setLoading('user-login-btn', false, 'Sign In'); return
-      }
-
-      const { data, error } = await db.auth.signInWithPassword({ email, password: pass })
-
-      setLoading('user-login-btn', false, 'Sign In')
-
-      if (error) {
-        showAlert('u-login-alert', 'error', error.message); return
-      }
-
-      const user = data.user
-      currentUserId = user.id
-
-      document.getElementById('user-auth').style.display = 'none'
-      document.getElementById('user-dash').style.display = 'block'
-      document.getElementById('ud-name').textContent  = user.user_metadata.full_name || 'User'
-      document.getElementById('ud-email').textContent = user.email
-      document.getElementById('ud-time').textContent  = new Date().toLocaleTimeString()
-    }
-
-
-    /* ============================================================
-       USER REGISTER — uses Supabase Auth
-    ============================================================= */
-    async function userRegister() {
-      clearAlert('u-reg-alert')
-      setLoading('user-reg-btn', true, 'Create Account')
-
-      const name  = document.getElementById('ur-name').value.trim()
-      const email = document.getElementById('ur-email').value.trim().toLowerCase()
-      const pass  = document.getElementById('ur-pass').value
-      const pass2 = document.getElementById('ur-pass2').value
-
-      if (!name || !email || !pass || !pass2) {
-        showAlert('u-reg-alert', 'error', 'Please fill in all fields.')
-        setLoading('user-reg-btn', false, 'Create Account'); return
-      }
-      if (!validEmail(email)) {
-        showAlert('u-reg-alert', 'error', 'Please enter a valid email address.')
-        setLoading('user-reg-btn', false, 'Create Account'); return
-      }
-      if (govEmail(email)) {
-        showAlert('u-reg-alert', 'error', 'Government emails must use the Government portal.')
-        setLoading('user-reg-btn', false, 'Create Account'); return
-      }
-      if (!strongPw(pass)) {
-        showAlert('u-reg-alert', 'error', 'Password must be 8+ characters and include a number.')
-        setLoading('user-reg-btn', false, 'Create Account'); return
-      }
-      if (pass !== pass2) {
-        showAlert('u-reg-alert', 'error', 'Passwords do not match.')
-        setLoading('user-reg-btn', false, 'Create Account'); return
-      }
-
-      const { error } = await db.auth.signUp({
-        email,
-        password: pass,
-        options: { data: { full_name: name } }
-      })
-
-      setLoading('user-reg-btn', false, 'Create Account')
-
-      if (error) {
-        showAlert('u-reg-alert', 'error', error.message); return
-      }
-
-      showAlert('u-reg-alert', 'success', '✔ Account created! Check your email to confirm, then sign in.')
-      setTimeout(() => userTab('login'), 2200)
-    }
-
-
-    /* ============================================================
-       USER LOGOUT
-    ============================================================= */
-    async function userLogout() {
-      await db.auth.signOut()
-      currentUserId = null
-      document.getElementById('user-dash').style.display = 'none'
-      document.getElementById('user-auth').style.display = ''
-      userTab('login')
-      showAlert('u-login-alert', 'info', 'You have been signed out.')
-    }
-
-
-    /* ============================================================
-       EMERGENCY TYPE SELECTION
-    ============================================================= */
-    function selectType(tile) {
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'))
-      tile.classList.add('selected')
-      selectedType = tile.dataset.type
-      clearAlert('type-alert')
-    }
-
-    function continueToReport() {
-      if (!selectedType) {
-        showAlert('type-alert', 'error', 'Please select a type of emergency first.'); return
-      }
-      const labels = {
-        fire:'🔥 Fire Report', flood:'🌊 Flood Report',
-        emergency:'🚨 Emergency Report', hurricane:'🌀 Hurricane Report', earthquake:'⚡ Earthquake Report'
-      }
-      document.getElementById('report-topbar-title').textContent = labels[selectedType]
-      showPage('page-report')
-      loadPublicReports()
-    }
-
-
-    /* ============================================================
-       SEVERITY SELECTION
-    ============================================================= */
-    function selectSev(btn) {
-      document.querySelectorAll('.sev-btn').forEach(b =>
-        b.classList.remove('sel-low','sel-medium','sel-high'))
-      btn.classList.add('sel-' + btn.dataset.sev)
-      selectedSev = btn.dataset.sev
-    }
-
-
-    /* ============================================================
-       SUBMIT INCIDENT REPORT — inserts into Supabase
-    ============================================================= */
-    async function submitReport() {
-      clearAlert('report-alert')
-      setLoading('submit-btn', true, 'Submit Report')
-
-      const title   = document.getElementById('r-title').value.trim()
-      const dt      = document.getElementById('r-datetime').value
-      const desc    = document.getElementById('r-desc').value.trim()
-      const parish  = document.getElementById('r-parish').value
-      const address = document.getElementById('r-address').value.trim()
-      const name    = document.getElementById('r-name').value.trim()
-      const phone   = document.getElementById('r-phone').value.trim()
-      const email   = document.getElementById('r-email').value.trim()
-
-      // Validate all required fields
-      if (!title)       { showAlert('report-alert','error','Please enter a title.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!dt)          { showAlert('report-alert','error','Please enter the date and time.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!desc)        { showAlert('report-alert','error','Please add a description.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!selectedSev) { showAlert('report-alert','error','Please select a severity level.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!parish)      { showAlert('report-alert','error','Please select a parish.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!address)     { showAlert('report-alert','error','Please enter the address.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!name)        { showAlert('report-alert','error','Please enter your name.'); setLoading('submit-btn',false,'Submit Report'); return }
-      if (!phone)       { showAlert('report-alert','error','Please enter your phone number.'); setLoading('submit-btn',false,'Submit Report'); return }
-
-      // Insert into the incident_reports table
-      // Column names here MUST match your Supabase table exactly
-      const { data, error } = await db
-        .from('incident_reports')
-        .insert({
-          type:           selectedType,
-          title:          title,
-          description:    desc,
-          severity:       selectedSev,
-          parish:         parish,
-          address:        address,
-          reporter_name:  name,
-          reporter_phone: phone,
-          reporter_email: email,
-          status:         'pending',
-          response:       '',
-          responded_by:   '',
-          responded_at:   ''
-        })
-        .select()
-
-      setLoading('submit-btn', false, 'Submit Report')
-
-      if (error) {
-        showAlert('report-alert', 'error', 'Failed to submit: ' + error.message); return
-      }
-
-      showAlert('report-alert', 'success',
-        `✔ Report submitted! Reference ID: #${data[0].id}. Routed to the relevant agency.`)
-
-      // Clear all form fields
-      ;['r-title','r-datetime','r-desc','r-address','r-name','r-phone','r-email']
-        .forEach(id => document.getElementById(id).value = '')
-      document.getElementById('r-parish').value = ''
-      document.querySelectorAll('.sev-btn')
-        .forEach(b => b.classList.remove('sel-low','sel-medium','sel-high'))
-      selectedSev = ''
-
-      // Reload the list below the form
-      await loadPublicReports()
-    }
-
-
-    /* ============================================================
-       LOAD PUBLIC REPORTS
-       Fetches reports from Supabase and renders them below the form.
-       Shows official responses if any have been added.
-    ============================================================= */
-    async function loadPublicReports() {
-      const { data, error } = await db
-        .from('incident_reports')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20)   // show the 20 most recent
-
-      if (error) { console.error('Error loading public reports:', error); return }
-
-      renderPublicReports(data)
-    }
-
-    function renderPublicReports(data) {
-      const container = document.getElementById('reports-list')
-      const countEl   = document.getElementById('report-count')
-
-      if (!data || data.length === 0) {
-        countEl.textContent = ''
-        container.innerHTML = '<div class="no-reports">No reports yet</div>'
-        return
-      }
-
-      countEl.textContent = `(${data.length})`
-
-      const icons = { fire:'🔥', flood:'🌊', emergency:'🚨', hurricane:'🌀', earthquake:'⚡' }
-
-      container.innerHTML = data.map(r => `
-        <div class="report-item">
-          <div class="report-item-top">
-            <span class="report-item-title">${icons[r.type]||'📋'} ${esc(r.title)}</span>
-            <span class="badge badge-${esc(r.status)}">${statusLabel(r.status)}</span>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-            <span class="badge badge-${esc(r.type)}">${esc(r.type)}</span>
-            <span class="badge badge-${esc(r.severity)}">${esc(r.severity)} risk</span>
-            <span style="font-size:0.75rem;color:#888;">📍 ${esc(r.parish)}</span>
-          </div>
-          <div class="report-meta">
-            ID #${r.id} · ${esc(r.created_at ? r.created_at.slice(0,16).replace('T',' ') : '')}
-          </div>
-          ${r.response ? `
-            <div class="official-response">
-              <strong>Official Response — ${esc(r.responded_by)}</strong>
-              ${esc(r.response)}
-            </div>` : ''}
+    <button
+      id="sms-side-toggle"
+      class="sms-side-toggle"
+      title="Send SMS to capture exact location"
+    >
+      📍
+    </button>
+    <div id="sms-side-bar" class="sms-side-bar" aria-hidden="true">
+      <div class="sms-side-header">
+        <span>SMS Location</span>
+        <button
+          id="sms-side-close"
+          class="sms-side-close"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+      <div class="sms-side-body">
+        <div class="sms-side-row">
+          <input
+            id="sms-side-phone"
+            type="tel"
+            placeholder="Phone number"
+            aria-label="Phone number"
+          />
         </div>
-      `).join('')
-    }
+        <div class="sms-side-row">
+          <span id="sms-side-location" class="sms-side-location"
+            >Location: --</span
+          >
+          <button id="sms-side-refresh" type="button" class="sms-side-refresh">
+            Update
+          </button>
+        </div>
+        <button id="sms-side-send" type="button" class="sms-side-send">
+          Send SMS
+        </button>
+        <div id="sms-side-status" class="sms-side-status">No SMS sent yet.</div>
+      </div>
+    </div>
 
-
-    /* ============================================================
-       INITIALISATION — runs once when the page loads
-    ============================================================= */
-    ;(function init() {
-      // Pre-fill the datetime field with the current time
-      const now = new Date()
-      const pad = n => String(n).padStart(2,'0')
-      document.getElementById('r-datetime').value =
-        `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
-
-      // If a Supabase session already exists (e.g. user didn't log out),
-      // restore their logged-in state automatically
-      db.auth.getSession().then(({ data: { session } }) => {
-        if (session && session.user) {
-          currentUserId = session.user.id
-          const user = session.user
-          document.getElementById('user-auth').style.display = 'none'
-          document.getElementById('user-dash').style.display = 'block'
-          document.getElementById('ud-name').textContent  = user.user_metadata.full_name || 'User'
-          document.getElementById('ud-email').textContent = user.email
-          document.getElementById('ud-time').textContent  = 'Restored session'
-        }
-      })
-    })()
-
-    // Allow Enter key to submit whichever login form is active
-    document.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return
-      const active = document.querySelector('.page.active')
-      if (!active) return
-      if (active.id === 'page-gov') {
-        document.getElementById('gp-login').classList.contains('active') ? govLogin() : govRegister()
-      } else if (active.id === 'page-user') {
-        document.getElementById('up-login').classList.contains('active') ? userLogin() : userRegister()
-      }
-    })
-
-  </script>
-
-</body>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="index.js"></script>
+  </body>
 </html>
